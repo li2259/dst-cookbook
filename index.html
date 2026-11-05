@@ -239,7 +239,19 @@
   footer b{color:var(--muted);font-weight:600}
 
   ::selection{background:rgba(255,138,61,.3)}
-</style>
+  /* ---------- language switch ---------- */
+  .headright{display:flex;align-items:center;gap:10px;flex:1 1 360px;justify-content:flex-end;max-width:560px}
+  .langbtn{display:flex;gap:2px;padding:3px;background:#1d1613;border:1px solid var(--line);border-radius:9px;cursor:pointer;font:11px/1 var(--sans);letter-spacing:.06em;flex:0 0 auto;transition:.16s}
+  .langbtn span{padding:6px 8px;border-radius:6px;color:var(--dim);transition:.15s}
+  .langbtn span.on{background:linear-gradient(180deg,var(--ember2),var(--ember));color:#1a1108;font-weight:700}
+  .langbtn:hover span:not(.on){color:var(--ink)}
+  .sbtn span{white-space:nowrap}
+  body.en .thead,body.en .irow{grid-template-columns:minmax(128px,1.45fr) 1fr 1fr 1fr}
+  @media (max-width:720px){
+    .headright{flex:1 1 100%;max-width:none;justify-content:space-between}
+    .searchwrap{max-width:none;flex:1}
+    body.en .thead,body.en .irow{grid-template-columns:minmax(92px,1.15fr) 1fr 1fr 1fr}
+  }</style>
 </head>
 <body>
 <div class="wrap">
@@ -247,43 +259,46 @@
     <div class="brand">
       <div class="crest" aria-hidden="true"></div>
       <div>
-        <h1>饥荒烹饪手册</h1>
-        <p class="sub">食材三维 · 配方速查 <span class="tag">联机版</span></p>
+        <h1 id="hTitle">饥荒烹饪手册</h1>
+        <p class="sub"><span id="hSub">食材三维 · 配方速查</span> <span class="tag" id="hTag">联机版</span></p>
       </div>
     </div>
-    <div class="searchwrap">
-      <span class="ico">⌕</span>
-      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="搜食材或菜名：浆果 / 火龙果 / 肉丸" aria-label="搜索" />
-      <kbd>/</kbd>
+    <div class="headright">
+      <button class="langbtn" id="langBtn" aria-label="switch language">
+        <span data-lang="zh">中</span><span data-lang="en">EN</span>
+      </button>
+      <div class="searchwrap">
+        <span class="ico">⌕</span>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="搜食材或菜名：浆果 / 火龙果 / 肉丸" aria-label="search" />
+        <kbd>/</kbd>
+      </div>
     </div>
   </header>
 
   <div class="meta">
-    <span><b id="statIng">0</b> 种食材</span><span class="dot"></span>
-    <span><b id="statDish">0</b> 道菜肴</span><span class="dot"></span>
-    <span>点表头按饥饿 / 生命 / 理智 排序，点食材看它能做什么菜</span>
+    <span><b id="statIng">0</b> <span id="uIng">种食材</span></span><span class="dot"></span>
+    <span><b id="statDish">0</b> <span id="uDish">道菜肴</span></span><span class="dot"></span>
+    <span id="mHint">点表头按饥饿 / 生命 / 理智 排序，点食材看它能做什么菜</span>
   </div>
 
   <main>
-    <!-- 食材 -->
-    <section class="panel" aria-label="食材表">
+    <section class="panel" id="panelIng">
       <div class="phead">
-        <h2>食材 <small id="ingHint">按饥饿值从高到低</small></h2>
+        <h2><span id="lbIng">食材</span> <small id="ingHint"></small></h2>
         <div class="sorts" id="ingSorts"></div>
       </div>
       <div class="thead">
-        <span>食材</span>
-        <span class="th" data-stat="hunger"><i class="k" style="background:var(--hunger)"></i>饥饿<b class="ar"></b></span>
-        <span class="th" data-stat="health"><i class="k" style="background:var(--health)"></i>生命<b class="ar"></b></span>
-        <span class="th" data-stat="sanity"><i class="k" style="background:var(--sanity)"></i>理智<b class="ar"></b></span>
+        <span id="thName">食材</span>
+        <span class="th" data-stat="hunger"><i class="k" style="background:var(--hunger)"></i><span data-lab="hunger">饥饿</span><b class="ar"></b></span>
+        <span class="th" data-stat="health"><i class="k" style="background:var(--health)"></i><span data-lab="health">生命</span><b class="ar"></b></span>
+        <span class="th" data-stat="sanity"><i class="k" style="background:var(--sanity)"></i><span data-lab="sanity">理智</span><b class="ar"></b></span>
       </div>
       <div class="ilist" id="ilist"></div>
     </section>
 
-    <!-- 菜肴 -->
-    <section class="panel" aria-label="菜肴表">
+    <section class="panel" id="panelDish">
       <div class="phead">
-        <h2 id="dishTitle">菜肴配方 <small id="dishHint">全部</small></h2>
+        <h2 id="dishTitle">菜肴配方</h2>
         <div class="sorts" id="dishSorts"></div>
       </div>
       <div class="hero" id="hero"></div>
@@ -291,105 +306,173 @@
     </section>
   </main>
 
-  <footer>
-    <b>数据说明</b>：数值参考《饥荒：联机版》烹饪锅与社区资料整理（生存三维 = 饥饿 / 生命 / 理智），角色、版本与某些特殊食材会带来差异；「需求」写的是烹饪锅判定条件，不是唯一配方，同类食材可以互换。<br />
-    <b>用法</b>：点表头切换排序方向；输入食材名可定位食材并列出相关菜；点菜肴里的食材小标签可反查这个食材。数值为 0 的食材多作填充或不可直接食用。
-  </footer>
+  <footer id="foot"></footer>
 </div>
 
 <script>
-/* ============ 食材：生存三维 ============ */
-/* hunger=饥饿 health=生命 sanity=理智 ; w=烹饪权重说明 ; life=腐坏天数 */
+/* ================= i18n ================= */
+const S = {
+  zh: {
+    doc: '饥荒烹饪手册 · 食材三维 & 配方速查',
+    title: '饥荒烹饪手册', sub: '食材三维 · 配方速查', tag: '联机版',
+    ph: '搜食材或菜名：浆果 / 火龙果 / 肉丸',
+    ing: '食材', dish: '菜肴配方', all: '全部',
+    stat: { hunger:'饥饿', health:'生命', sanity:'理智' },
+    hint: '点表头按饥饿 / 生命 / 理智 排序，点食材看它能做什么菜',
+    uIng: '种食材', uDish: '道菜肴',
+    desc: '↓ 高到低', asc: '↑ 低到高',
+    summary: (n, st, dir) => `共 ${n} 种 · 按${st}${dir === 'desc' ? '从高到低' : '从低到高'}`,
+    dishTitle: (sel, q, n) => sel ? `含「${sel}」· ${n} 道` : (q ? `搜索：${q} · ${n} 道` : `全部 · ${n} 道`),
+    priority: '优先度', cancel: '取消选中',
+    emptyIng: '没找到这个食材。<br>试试 <b>浆果</b>、<b>火龙果</b>、<b>怪物肉</b>。',
+    emptyDish: '还没找到能做的菜。<br>换个食材，或者清空搜索看看全部配方。',
+    showAll: (n) => `查看全部 ${n} 道菜`,
+    foot: '<b>数据说明</b>：数值参考《饥荒：联机版》烹饪锅与社区资料整理（生存三维 = 饥饿 / 生命 / 理智），角色、版本与某些特殊食材会带来差异；「需求」写的是烹饪锅判定条件，不是唯一配方，同类食材可以互换。<br /><b>用法</b>：点表头切换排序方向；输入食材名可定位食材并列出相关菜；点菜肴里的食材小标签可反查这个食材。数值为 0 的食材多作填充或不可直接食用。'
+  },
+  en: {
+    doc: "DST Cooking Handbook · stats & recipes at a glance",
+    title: 'DST Cooking Handbook', sub: 'Stats & recipes at a glance', tag: 'DST',
+    ph: 'Search: berries / dragon fruit / meatballs',
+    ing: 'Ingredients', dish: 'Recipes', all: 'All',
+    stat: { hunger:'Hunger', health:'Health', sanity:'Sanity' },
+    hint: 'Click a column header to sort by hunger / health / sanity; click an ingredient to see its dishes',
+    uIng: 'ingredients', uDish: 'recipes',
+    desc: '↓ High to low', asc: '↑ Low to high',
+    summary: (n, st, dir) => `${n} items · ${st}, ${dir === 'desc' ? 'high to low' : 'low to high'}`,
+    dishTitle: (sel, q, n) => sel ? `with ${sel} · ${n}` : (q ? `Search: ${q} · ${n}` : `All · ${n}`),
+    priority: 'Priority', cancel: 'Clear',
+    emptyIng: 'No such ingredient.<br>Try <b>berries</b>, <b>dragon fruit</b> or <b>monster meat</b>.',
+    emptyDish: 'No dishes found.<br>Pick another ingredient, or clear the search.',
+    showAll: (n) => `Show all ${n} dishes`,
+    foot: '<b>Data</b>: values follow Don\'t Starve Together\'s crock pot and community references (the three stats are hunger / health / sanity). Characters, versions and special ingredients can shift things; “requirements” are the pot\'s checks, not the only recipe — similar ingredients swap freely.<br /><b>How to</b>: click a column header to flip the sort; type an ingredient to find its dishes; click an ingredient tag inside a card to look it up. Items with 0 stats are mostly filler or not edible raw.'
+  }
+};
+const LANG_KEY = 'dst-lang';
+let lang = (localStorage.getItem(LANG_KEY) === 'en') ? 'en' : 'zh';
+const L = () => S[lang];
+const LAB = (k) => L().stat[k];
+
+/* ================= data ================= */
+const CAT = {
+  meat:{zh:'肉',en:'Meat'}, egg:{zh:'蛋',en:'Egg'}, sweet:{zh:'甜',en:'Sweet'},
+  dairy:{zh:'乳',en:'Dairy'}, fruit:{zh:'果',en:'Fruit'}, veg:{zh:'菜',en:'Veggie'}, misc:{zh:'其他',en:'Misc'}
+};
+
 const ING = [
-  {n:'大肉',    cat:'肉', h:25,   p:3,   s:0,  w:'肉 1',    life:'8 天', note:'烤熟更好存'},
-  {n:'小肉',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天'},
-  {n:'鸡腿',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天'},
-  {n:'火鸡腿',  cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天', note:'不能烤，直接下锅'},
-  {n:'蛙腿',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天'},
-  {n:'鱼',      cat:'肉', h:12.5, p:1,   s:0,  w:'肉(鱼) 1 鱼度', life:'4 天'},
-  {n:'鳗鱼',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉(鱼) 0.5', life:'4 天'},
-  {n:'怪物肉',  cat:'肉', h:18.8, p:-20, s:-15,w:'肉 1（怪物肉）', life:'6 天', note:'≥2 块必出怪物千层面'},
-  {n:'蛋',      cat:'蛋', h:12.5, p:1,   s:0,  w:'蛋 1',    life:'10 天'},
-  {n:'蜂蜜',    cat:'甜', h:12.5, p:3,   s:0,  w:'甜味剂 1', life:'40 天'},
-  {n:'黄油',    cat:'乳', h:12.5, p:0,   s:0,  w:'乳制品 1', life:'40 天'},
-  {n:'浆果',    cat:'果', h:9.4,  p:0,   s:0,  w:'水果 0.5', life:'6 天'},
-  {n:'多汁浆果',cat:'果', h:12.5, p:1,   s:0,  w:'水果 1',   life:'2 天'},
-  {n:'火龙果',  cat:'果', h:25,   p:3,   s:0,  w:'水果 1',   life:'10 天', note:'唯一能做出 40 生命菜的水果'},
-  {n:'西瓜',    cat:'果', h:12.5, p:3,   s:5,  w:'水果 1',   life:'12 天'},
-  {n:'石榴',    cat:'果', h:9.4,  p:3,   s:0,  w:'水果 1',   life:'10 天'},
-  {n:'榴莲',    cat:'果', h:25,   p:-3,  s:-5, w:'水果 1',   life:'10 天'},
-  {n:'洞穴香蕉',cat:'果', h:12,   p:1,   s:0,  w:'水果 1',   life:'10 天'},
-  {n:'胡萝卜',  cat:'菜', h:12.5, p:1,   s:0,  w:'蔬菜 1',   life:'10 天'},
-  {n:'玉米',    cat:'菜', h:25,   p:3,   s:0,  w:'蔬菜 1',   life:'10 天'},
-  {n:'南瓜',    cat:'菜', h:37.5, p:3,   s:0,  w:'蔬菜 1',   life:'10 天', note:'饥饿最高的蔬菜'},
-  {n:'茄子',    cat:'菜', h:25,   p:3,   s:0,  w:'蔬菜 1',   life:'10 天'},
-  {n:'土豆',    cat:'菜', h:12.5, p:1,   s:0,  w:'蔬菜 1',   life:'10 天'},
-  {n:'爆米花',  cat:'菜', h:12.5, p:3,   s:0,  w:'蔬菜 1',   life:'10 天'},
-  {n:'烤南瓜',  cat:'菜', h:37.5, p:8,   s:0,  w:'蔬菜 1',   life:'6 天'},
-  {n:'烤胡萝卜',cat:'菜', h:12.5, p:3,   s:0,  w:'蔬菜 1',   life:'6 天'},
-  {n:'烤浆果',  cat:'果', h:12.5, p:1,   s:0,  w:'水果 0.5', life:'3 天'},
-  {n:'曼德拉草',cat:'果', h:0,    p:0,   s:0,  w:'曼德拉草 1', life:'12 天', note:'生吃会昏睡，下锅才成汤'},
-  {n:'桦树果',  cat:'果', h:9.4,  p:0,   s:0,  w:'坚果 1',   life:'20 天'},
-  {n:'冰',      cat:'其他', h:0,  p:0,   s:0,  w:'冰 1',     life:'—', note:'不可直接吃，降温料理要用'},
-  {n:'树枝',    cat:'其他', h:0,  p:0,   s:0,  w:'不可食用', life:'—', note:'判定用，乱放会把菜做成烤肉串'},
-  {n:'蝴蝶翅膀',cat:'其他', h:8,  p:8,   s:0,  w:'其他 1',   life:'—'},
-  {n:'地衣',    cat:'菜', h:12.5, p:3,   s:-5, w:'蔬菜 1',   life:'2 天', note:'长在遗迹洞穴墙上，采完 5 天再长；生吃会掉理智'}
+  {n:'大肉',    e:'Meat',          cat:'meat',  h:25,   p:3,   s:0,  w:'肉 1',          we:'Meat 1',        life:'8 天',  lifeE:'8 days', note:'烤熟更好存', noteE:'Lasts longer cooked'},
+  {n:'小肉',    e:'Morsel',        cat:'meat',  h:12.5, p:1,   s:0,  w:'肉 0.5',        we:'Meat 0.5',      life:'6 天',  lifeE:'6 days'},
+  {n:'鸡腿',    e:'Drumstick',     cat:'meat',  h:12.5, p:1,   s:0,  w:'肉 0.5',        we:'Meat 0.5',      life:'6 天',  lifeE:'6 days'},
+  {n:'火鸡腿',  e:'Turkey Leg',    cat:'meat',  h:12.5, p:1,   s:0,  w:'肉 0.5',        we:'Meat 0.5',      life:'6 天',  lifeE:'6 days', note:'不能烤，直接下锅', noteE:'Cannot be roasted — goes straight into the pot'},
+  {n:'蛙腿',    e:'Frog Legs',     cat:'meat',  h:12.5, p:1,   s:0,  w:'肉 0.5',        we:'Meat 0.5',      life:'6 天',  lifeE:'6 days'},
+  {n:'鱼',      e:'Fish',          cat:'meat',  h:12.5, p:1,   s:0,  w:'肉(鱼) 1',      we:'Meat (fish) 1', life:'4 天',  lifeE:'4 days'},
+  {n:'鳗鱼',    e:'Eel',           cat:'meat',  h:12.5, p:1,   s:0,  w:'肉(鱼) 0.5',    we:'Meat (fish) 0.5', life:'4 天', lifeE:'4 days'},
+  {n:'怪物肉',  e:'Monster Meat',  cat:'meat',  h:18.8, p:-20, s:-15,w:'肉 1（怪物肉）', we:'Meat 1 (monster)', life:'6 天', lifeE:'6 days', note:'≥2 块必出怪物千层面', noteE:'2+ pieces always make Monster Lasagna'},
+  {n:'蛋',      e:'Egg',           cat:'egg',   h:12.5, p:1,   s:0,  w:'蛋 1',          we:'Egg 1',         life:'10 天', lifeE:'10 days'},
+  {n:'蜂蜜',    e:'Honey',         cat:'sweet', h:12.5, p:3,   s:0,  w:'甜味剂 1',      we:'Sweetener 1',   life:'40 天', lifeE:'40 days'},
+  {n:'黄油',    e:'Butter',        cat:'dairy', h:12.5, p:0,   s:0,  w:'乳制品 1',      we:'Dairy 1',       life:'40 天', lifeE:'40 days'},
+  {n:'浆果',    e:'Berries',       cat:'fruit', h:9.4,  p:0,   s:0,  w:'水果 0.5',      we:'Fruit 0.5',     life:'6 天',  lifeE:'6 days'},
+  {n:'多汁浆果',e:'Juicy Berries', cat:'fruit', h:12.5, p:1,   s:0,  w:'水果 1',        we:'Fruit 1',       life:'2 天',  lifeE:'2 days'},
+  {n:'火龙果',  e:'Dragon Fruit',  cat:'fruit', h:25,   p:3,   s:0,  w:'水果 1',        we:'Fruit 1',       life:'10 天', lifeE:'10 days', note:'唯一能做出 40 生命菜的水果', noteE:'The only fruit that makes a 40-health dish'},
+  {n:'西瓜',    e:'Watermelon',    cat:'fruit', h:12.5, p:3,   s:5,  w:'水果 1',        we:'Fruit 1',       life:'12 天', lifeE:'12 days'},
+  {n:'石榴',    e:'Pomegranate',   cat:'fruit', h:9.4,  p:3,   s:0,  w:'水果 1',        we:'Fruit 1',       life:'10 天', lifeE:'10 days'},
+  {n:'榴莲',    e:'Durian',        cat:'fruit', h:25,   p:-3,  s:-5, w:'水果 1',        we:'Fruit 1',       life:'10 天', lifeE:'10 days'},
+  {n:'洞穴香蕉',e:'Cave Banana',   cat:'fruit', h:12,   p:1,   s:0,  w:'水果 1',        we:'Fruit 1',       life:'10 天', lifeE:'10 days'},
+  {n:'胡萝卜',  e:'Carrot',        cat:'veg',   h:12.5, p:1,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'10 天', lifeE:'10 days'},
+  {n:'玉米',    e:'Corn',          cat:'veg',   h:25,   p:3,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'10 天', lifeE:'10 days'},
+  {n:'南瓜',    e:'Pumpkin',       cat:'veg',   h:37.5, p:3,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'10 天', lifeE:'10 days', note:'饥饿最高的蔬菜', noteE:'Highest-hunger veggie'},
+  {n:'茄子',    e:'Eggplant',      cat:'veg',   h:25,   p:3,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'10 天', lifeE:'10 days'},
+  {n:'土豆',    e:'Potato',        cat:'veg',   h:12.5, p:1,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'10 天', lifeE:'10 days'},
+  {n:'爆米花',  e:'Popcorn',       cat:'veg',   h:12.5, p:3,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'10 天', lifeE:'10 days'},
+  {n:'烤南瓜',  e:'Roasted Pumpkin',cat:'veg',  h:37.5, p:8,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'6 天',  lifeE:'6 days'},
+  {n:'烤胡萝卜',e:'Roasted Carrot', cat:'veg',  h:12.5, p:3,   s:0,  w:'蔬菜 1',        we:'Veggie 1',      life:'6 天',  lifeE:'6 days'},
+  {n:'烤浆果',  e:'Roasted Berries',cat:'fruit',h:12.5, p:1,   s:0,  w:'水果 0.5',      we:'Fruit 0.5',     life:'3 天',  lifeE:'3 days'},
+  {n:'曼德拉草',e:'Mandrake',      cat:'fruit', h:0,    p:0,   s:0,  w:'曼德拉草 1',    we:'Mandrake 1',    life:'12 天', lifeE:'12 days', note:'生吃会昏睡，下锅才成汤', noteE:'Raw knocks you out — only the pot makes soup'},
+  {n:'桦树果',  e:'Birchnut',      cat:'fruit', h:9.4,  p:0,   s:0,  w:'坚果 1',        we:'Nut 1',         life:'20 天', lifeE:'20 days'},
+  {n:'冰',      e:'Ice',           cat:'misc',  h:0,    p:0,   s:0,  w:'冰 1',          we:'Ice 1',         life:'—',     lifeE:'—', note:'不可直接吃，降温料理要用', noteE:'Not edible; needed for cooling dishes'},
+  {n:'树枝',    e:'Twigs',         cat:'misc',  h:0,    p:0,   s:0,  w:'不可食用',      we:'Inedible',      life:'—',     lifeE:'—', note:'判定用，乱放会把菜做成烤肉串', noteE:'A recipe gate — random twigs turn dishes into Kabobs'},
+  {n:'蝴蝶翅膀',e:'Butterfly Wings',cat:'misc', h:8,    p:8,   s:0,  w:'其他 1',        we:'Other 1',       life:'—',     lifeE:'—'},
+  {n:'地衣',    e:'Lichen',        cat:'veg',   h:12.5, p:3,   s:-5, w:'蔬菜 1',        we:'Veggie 1',      life:'2 天',  lifeE:'2 days', note:'长在遗迹洞穴墙上，采完 5 天再长；生吃会掉理智', noteE:'Grows on Ruins cave walls, regrows in 5 days; raw costs sanity'}
 ];
 
-/* ============ 菜肴：三维 + 必要条件 ============ */
 const DISH = [
-  {n:'肉丸',        h:62.5, p:3,   s:5,   prio:'-1', need:'肉度 0.5–2.5，不能放树枝；最省肉的保底菜', uses:['大肉','小肉','怪物肉','浆果','胡萝卜','蛋']},
-  {n:'炖肉',        h:150,  p:12,  s:5,   prio:'0',  need:'肉度 ≥3，不能放树枝；大肉三块最稳', uses:['大肉','小肉']},
-  {n:'蜜汁火腿',    h:75,   p:30,  s:5,   prio:'2',  need:'蜂蜜 ≥1、肉度 ≥2，不能放树枝', uses:['蜂蜜','大肉','小肉']},
-  {n:'培根煎蛋',    h:75,   p:20,  s:5,   prio:'10', need:'蛋度 ≥2、肉度 ≥1.5，不能放蔬菜', uses:['蛋','大肉','小肉']},
-  {n:'火龙果派',    h:75,   p:40,  s:5,   prio:'1',  need:'火龙果 ≥1，不能放肉；40 生命的顶级菜', uses:['火龙果']},
-  {n:'波兰饺子',    h:37.5, p:40,  s:5,   prio:'5',  need:'蛋 ≥1、肉度 ≥0.5、蔬菜 ≥0.5，不能放树枝', uses:['蛋','小肉','胡萝卜','土豆']},
-  {n:'炸鱼排',      h:37.5, p:40,  s:5,   prio:'10', need:'鱼 ≥1、树枝 ≥1', uses:['鱼','树枝']},
-  {n:'奶油松饼',    h:37.5, p:60,  s:5,   prio:'10', need:'黄油 ≥1、蛋 ≥1、浆果 ≥1', uses:['黄油','蛋','浆果']},
-  {n:'蝴蝶蛋糕',    h:37.5, p:20,  s:5,   prio:'1',  need:'蝴蝶翅膀 ≥1、蔬菜 ≥0.5，不能放肉', uses:['蝴蝶翅膀','胡萝卜']},
-  {n:'墨西哥鱼饼',  h:37.5, p:20,  s:5,   prio:'10', need:'鱼 ≥1、玉米 ≥1', uses:['鱼','玉米']},
-  {n:'蛙腿三明治',  h:37.5, p:20,  s:5,   prio:'1',  need:'蛙腿 ≥1、蔬菜 ≥0.5', uses:['蛙腿','胡萝卜']},
-  {n:'蜜汁卤肉',    h:37.5, p:20,  s:5,   prio:'2',  need:'蜂蜜 ≥1、肉度 ≥0.5，不能放树枝', uses:['蜂蜜','小肉','鸡腿']},
-  {n:'西瓜冰',      h:12.5, p:3,   s:20,  prio:'10', need:'西瓜 ≥1、冰 ≥1，不能放肉/蛋/蔬菜；吃了降温', uses:['西瓜','冰']},
-  {n:'冰淇淋',      h:18.8, p:0,   s:33,  prio:'10', need:'乳制品 ≥1、冰 ≥1、甜味剂 ≥1；吃了降温', uses:['黄油','冰','蜂蜜']},
-  {n:'太妃糖',      h:25,   p:-3,  s:15,  prio:'10', need:'甜味剂 ≥3，不能放肉；理智换血的常用糖', uses:['蜂蜜']},
-  {n:'南瓜饼干',    h:37.5, p:0,   s:15,  prio:'10', need:'南瓜 ≥1、甜味剂 ≥2', uses:['南瓜','蜂蜜']},
-  {n:'烤肉串',      h:37.5, p:3,   s:5,   prio:'5',  need:'肉度 ≥0.5、树枝 ≥1，怪物肉 ≤1', uses:['小肉','鸡腿','树枝']},
-  {n:'怪物千层面',  h:37.5, p:-20, s:-20, prio:'10', need:'怪物肉 ≥2；饿的时候别乱煮', uses:['怪物肉']},
-  {n:'蔬菜杂烩',    h:25,   p:3,   s:5,   prio:'0',  need:'蔬菜 ≥0.5，不能放肉和树枝', uses:['胡萝卜','玉米','南瓜','茄子','土豆','浆果']},
-  {n:'果酱',        h:37.5, p:3,   s:5,   prio:'0',  need:'水果度 ≥1.5，不能放肉/蔬菜；4 颗浆果最省', uses:['浆果','西瓜','石榴','火龙果','洞穴香蕉','多汁浆果']},
-  {n:'水果杂烩',    h:25,   p:20,  s:5,   prio:'0',  need:'水果度 ≥3，不能放肉/蔬菜', uses:['浆果','火龙果','西瓜','石榴','榴莲','洞穴香蕉']},
-  {n:'火鸡大餐',    h:75,   p:20,  s:5,   prio:'10', need:'火鸡腿 ≥2、肉度 ≥0.5、水果 ≥0.5', uses:['火鸡腿','浆果','小肉']},
-  {n:'酿茄子',      h:37.5, p:3,   s:5,   prio:'1',  need:'茄子 ≥1、蔬菜 ≥0.5', uses:['茄子','胡萝卜']},
-  {n:'鳗鱼寿司',    h:18.8, p:20,  s:5,   prio:'20', need:'鳗鱼 ≥1、地衣 ≥1，剩 2 格可放树枝；优先度最高的料理之一', uses:['鳗鱼','地衣']},
-  {n:'曼德拉汤',    h:150,  p:100, s:5,   prio:'10', need:'曼德拉草 ≥1；曼德拉草不能先烤熟', uses:['曼德拉草']},
-  {n:'果仁杂烩',    h:12.5, p:30,  s:5,   prio:'10', need:'浆果 ≥1、坚果 ≥1，不能放肉/蛋/蔬菜', uses:['浆果','桦树果']},
-  {n:'华夫饼',      h:37.5, p:60,  s:5,   prio:'10', need:'黄油 ≥1、浆果 ≥1、蛋 ≥1', uses:['黄油','浆果','蛋']},
-  {n:'湿嗒嗒的一坨',h:0,    p:0,   s:0,   prio:'0',  need:'没有匹配到任何配方的失败品（例：4 个烤桦树果）', uses:['桦树果','树枝']}
+  {n:'肉丸',       e:'Meatballs',      h:62.5, p:3,   s:5,   prio:'-1', need:'肉度 0.5–2.5，不能放树枝；最省肉的保底菜', needE:'Meat 0.5–2.5, no twigs; the cheapest fallback dish', uses:['大肉','小肉','怪物肉','浆果','胡萝卜','蛋']},
+  {n:'炖肉',       e:'Meat Stew',      h:150,  p:12,  s:5,   prio:'0',  need:'肉度 ≥3，不能放树枝；大肉三块最稳', needE:'Meat ≥3, no twigs; three big meats is the safe bet', uses:['大肉','小肉']},
+  {n:'蜜汁火腿',   e:'Honey Ham',      h:75,   p:30,  s:5,   prio:'2',  need:'蜂蜜 ≥1、肉度 ≥2，不能放树枝', needE:'Honey ≥1, meat ≥2, no twigs', uses:['蜂蜜','大肉','小肉']},
+  {n:'培根煎蛋',   e:'Bacon and Eggs', h:75,   p:20,  s:5,   prio:'10', need:'蛋度 ≥2、肉度 ≥1.5，不能放蔬菜', needE:'Egg ≥2, meat ≥1.5, no veggies', uses:['蛋','大肉','小肉']},
+  {n:'火龙果派',   e:'Dragonpie',      h:75,   p:40,  s:5,   prio:'1',  need:'火龙果 ≥1，不能放肉；40 生命的顶级菜', needE:'Dragon Fruit ≥1, no meat; the top 40-health dish', uses:['火龙果']},
+  {n:'波兰饺子',   e:'Pierogi',        h:37.5, p:40,  s:5,   prio:'5',  need:'蛋 ≥1、肉度 ≥0.5、蔬菜 ≥0.5，不能放树枝', needE:'Egg ≥1, meat ≥0.5, veggie ≥0.5, no twigs', uses:['蛋','小肉','胡萝卜','土豆']},
+  {n:'炸鱼排',     e:'Fish Sticks',    h:37.5, p:40,  s:5,   prio:'10', need:'鱼 ≥1、树枝 ≥1', needE:'Fish ≥1, twigs ≥1', uses:['鱼','树枝']},
+  {n:'奶油松饼',   e:'Butter Muffin',  h:37.5, p:60,  s:5,   prio:'10', need:'黄油 ≥1、蛋 ≥1、浆果 ≥1', needE:'Butter ≥1, egg ≥1, berries ≥1', uses:['黄油','蛋','浆果']},
+  {n:'蝴蝶蛋糕',   e:'Butterfly Muffin',h:37.5,p:20,  s:5,   prio:'1',  need:'蝴蝶翅膀 ≥1、蔬菜 ≥0.5，不能放肉', needE:'Butterfly Wings ≥1, veggie ≥0.5, no meat', uses:['蝴蝶翅膀','胡萝卜']},
+  {n:'墨西哥鱼饼', e:'Fish Tacos',     h:37.5, p:20,  s:5,   prio:'10', need:'鱼 ≥1、玉米 ≥1', needE:'Fish ≥1, corn ≥1', uses:['鱼','玉米']},
+  {n:'蛙腿三明治', e:'Froggle Bunwich',h:37.5, p:20,  s:5,   prio:'1',  need:'蛙腿 ≥1、蔬菜 ≥0.5', needE:'Frog Legs ≥1, veggie ≥0.5', uses:['蛙腿','胡萝卜']},
+  {n:'蜜汁卤肉',   e:'Honey Nuggets',  h:37.5, p:20,  s:5,   prio:'2',  need:'蜂蜜 ≥1、肉度 ≥0.5，不能放树枝', needE:'Honey ≥1, meat ≥0.5, no twigs', uses:['蜂蜜','小肉','鸡腿']},
+  {n:'西瓜冰',     e:'Melonsicle',     h:12.5, p:3,   s:20,  prio:'10', need:'西瓜 ≥1、冰 ≥1，不能放肉/蛋/蔬菜；吃了降温', needE:'Watermelon ≥1, ice ≥1, no meat/egg/veggie; cools you down', uses:['西瓜','冰']},
+  {n:'冰淇淋',     e:'Ice Cream',      h:18.8, p:0,   s:33,  prio:'10', need:'乳制品 ≥1、冰 ≥1、甜味剂 ≥1；吃了降温', needE:'Dairy ≥1, ice ≥1, sweetener ≥1; cools you down', uses:['黄油','冰','蜂蜜']},
+  {n:'太妃糖',     e:'Taffy',          h:25,   p:-3,  s:15,  prio:'10', need:'甜味剂 ≥3，不能放肉；理智换血的常用糖', needE:'Sweetener ≥3, no meat; the classic sanity-for-health candy', uses:['蜂蜜']},
+  {n:'南瓜饼干',   e:'Pumpkin Cookie', h:37.5, p:0,   s:15,  prio:'10', need:'南瓜 ≥1、甜味剂 ≥2', needE:'Pumpkin ≥1, sweetener ≥2', uses:['南瓜','蜂蜜']},
+  {n:'烤肉串',     e:'Kabobs',         h:37.5, p:3,   s:5,   prio:'5',  need:'肉度 ≥0.5、树枝 ≥1，怪物肉 ≤1', needE:'Meat ≥0.5, twigs ≥1, monster meat ≤1', uses:['小肉','鸡腿','树枝']},
+  {n:'怪物千层面', e:'Monster Lasagna',h:37.5, p:-20, s:-20, prio:'10', need:'怪物肉 ≥2；饿的时候别乱煮', needE:'Monster Meat ≥2; do not cook this while hungry', uses:['怪物肉']},
+  {n:'蔬菜杂烩',   e:'Ratatouille',    h:25,   p:3,   s:5,   prio:'0',  need:'蔬菜 ≥0.5，不能放肉和树枝', needE:'Veggie ≥0.5, no meat or twigs', uses:['胡萝卜','玉米','南瓜','茄子','土豆','浆果']},
+  {n:'果酱',       e:'Fist Full of Jam',h:37.5,p:3,   s:5,   prio:'0',  need:'水果度 ≥1.5，不能放肉/蔬菜；4 颗浆果最省', needE:'Fruit ≥1.5, no meat/veggie; four berries is cheapest', uses:['浆果','西瓜','石榴','火龙果','洞穴香蕉','多汁浆果']},
+  {n:'水果杂烩',   e:'Fruit Medley',   h:25,   p:20,  s:5,   prio:'0',  need:'水果度 ≥3，不能放肉/蔬菜', needE:'Fruit ≥3, no meat/veggie', uses:['浆果','火龙果','西瓜','石榴','榴莲','洞穴香蕉']},
+  {n:'火鸡大餐',   e:'Turkey Dinner',  h:75,   p:20,  s:5,   prio:'10', need:'火鸡腿 ≥2、肉度 ≥0.5、水果 ≥0.5', needE:'Turkey Leg ≥2, meat ≥0.5, fruit ≥0.5', uses:['火鸡腿','浆果','小肉']},
+  {n:'酿茄子',     e:'Stuffed Eggplant',h:37.5,p:3,   s:5,   prio:'1',  need:'茄子 ≥1、蔬菜 ≥0.5', needE:'Eggplant ≥1, veggie ≥0.5', uses:['茄子','胡萝卜']},
+  {n:'鳗鱼寿司',   e:'Unagi',          h:18.8, p:20,  s:5,   prio:'20', need:'鳗鱼 ≥1、地衣 ≥1，剩 2 格可放树枝；优先度最高的料理之一', needE:'Eel ≥1, lichen ≥1, 2 free slots (twigs OK); one of the highest priorities', uses:['鳗鱼','地衣']},
+  {n:'曼德拉汤',   e:'Mandrake Soup',  h:150,  p:100, s:5,   prio:'10', need:'曼德拉草 ≥1；曼德拉草不能先烤熟', needE:'Mandrake ≥1; it must not be cooked first', uses:['曼德拉草']},
+  {n:'果仁杂烩',   e:'Trail Mix',      h:12.5, p:30,  s:5,   prio:'10', need:'浆果 ≥1、坚果 ≥1，不能放肉/蛋/蔬菜', needE:'Berries ≥1, nut ≥1, no meat/egg/veggie', uses:['浆果','桦树果']},
+  {n:'华夫饼',     e:'Waffles',        h:37.5, p:60,  s:5,   prio:'10', need:'黄油 ≥1、浆果 ≥1、蛋 ≥1', needE:'Butter ≥1, berries ≥1, egg ≥1', uses:['黄油','浆果','蛋']},
+  {n:'湿嗒嗒的一坨',e:'Wet Goop',      h:0,    p:0,   s:0,   prio:'0',  need:'没有匹配到任何配方的失败品（例：4 个烤桦树果）', needE:'No recipe matched (e.g. 4 roasted birchnuts)', uses:['桦树果','树枝']}
 ];
 
-/* ============ 状态 ============ */
+/* ================= state ================= */
 const state = { stat:'hunger', dir:'desc', q:'', sel:null, dstat:'hunger', ddir:'desc' };
-/* 条形长度参照各列最大值，保证整表可比较 */
 const IMAX = { h:37.5, p:20, s:15 };
 const DMAX = { h:150,  p:100, s:33 };
+const KEY = { hunger:'h', health:'p', sanity:'s' };
 const $ = (s) => document.querySelector(s);
 const fmt = (v) => (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
 
-const STAT_LABEL = { hunger:'饥饿', health:'生命', sanity:'理智' };
-const KEY = { hunger:'h', health:'p', sanity:'s' };
+const nm = (item) => lang === 'zh' ? item.n : item.e;
+const ingName = (zhName) => { const it = ING.find(x => x.n === zhName); return it ? nm(it) : zhName; };
+const catName = (key) => CAT[key] ? CAT[key][lang] : key;
 
-/* ============ 排序控件 ============ */
+/* ================= static text ================= */
+function applyStatic(){
+  const s = L();
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = s.doc;
+  $('#hTitle').textContent = s.title;
+  $('#hSub').textContent = s.sub;
+  $('#hTag').textContent = s.tag;
+  $('#q').placeholder = s.ph;
+  document.body.classList.toggle('en', lang === 'en');
+  $('#lbIng').textContent = s.ing;
+  $('#uIng').textContent = s.uIng;
+  $('#uDish').textContent = s.uDish;
+  $('#mHint').textContent = s.hint;
+  $('#thName').textContent = s.ing;
+  document.querySelectorAll('[data-lab]').forEach(el => { el.textContent = LAB(el.dataset.lab); });
+  $('#foot').innerHTML = s.foot;
+  document.querySelectorAll('#langBtn [data-lang]').forEach(el => {
+    el.classList.toggle('on', el.dataset.lang === lang);
+  });
+  document.querySelectorAll('.sorts .sbtn[data-stat]').forEach(b => { b.lastChild.textContent = LAB(b.dataset.stat); });
+}
+
+/* ================= sort controls ================= */
 function renderSorts(){
-  const iS = $('#ingSorts'), dS = $('#dishSorts');
-  iS.innerHTML = ['hunger','health','sanity'].map(k =>
+  const opts = ['hunger','health','sanity'].map(k =>
     `<button class="sbtn" data-role="istat" data-stat="${k}" aria-pressed="${state.stat===k}">
-       <i class="k" style="background:var(--${k})"></i>${STAT_LABEL[k]}</button>`).join('') +
-    `<button class="sbtn dirbtn" data-role="idir">${state.dir==='desc'?'↓ 高到低':'↑ 低到高'}</button>`;
-  dS.innerHTML = ['hunger','health','sanity'].map(k =>
+       <i class="k" style="background:var(--${k})"></i><span>${LAB(k)}</span></button>`).join('') +
+    `<button class="sbtn dirbtn" data-role="idir">${state.dir==='desc'?L().desc:L().asc}</button>`;
+  $('#ingSorts').innerHTML = opts;
+
+  const dopts = ['hunger','health','sanity'].map(k =>
     `<button class="sbtn" data-role="dstat" data-stat="${k}" aria-pressed="${state.dstat===k}">
-       <i class="k" style="background:var(--${k})"></i>${STAT_LABEL[k]}</button>`).join('') +
-    `<button class="sbtn dirbtn" data-role="ddir">${state.ddir==='desc'?'↓ 高到低':'↑ 低到高'}</button>`;
+       <i class="k" style="background:var(--${k})"></i><span>${LAB(k)}</span></button>`).join('') +
+    `<button class="sbtn dirbtn" data-role="ddir">${state.ddir==='desc'?L().desc:L().asc}</button>`;
+  $('#dishSorts').innerHTML = dopts;
 
   document.querySelectorAll('.thead .th').forEach(th => {
     const on = th.dataset.stat === state.stat;
@@ -398,25 +481,23 @@ function renderSorts(){
   });
 }
 
-/* ============ 食材渲染 ============ */
+/* ================= ingredients ================= */
 function ingMatches(i){
   if(!state.q) return true;
   const q = state.q.toLowerCase();
-  if(i.n.toLowerCase().includes(q) || i.cat.includes(state.q)) return true;
-  return DISH.some(d => d.uses.includes(i.n) && d.n.toLowerCase().includes(q));
+  if(i.n.toLowerCase().includes(q) || i.e.toLowerCase().includes(q) || catName(i.cat).toLowerCase().includes(q)) return true;
+  return DISH.some(d => d.uses.includes(i.n) && (d.n.toLowerCase().includes(q) || d.e.toLowerCase().includes(q)));
 }
 
 function renderIng(){
   const list = ING.filter(ingMatches);
   const k = KEY[state.stat];
-  list.sort((a,b) => {
-    const va = a[k] ?? -1e9, vb = b[k] ?? -1e9;
-    return state.dir === 'desc' ? vb - va : va - vb;
-  });
+  list.sort((a,b) => state.dir === 'desc' ? (b[k]||0) - (a[k]||0) : (a[k]||0) - (b[k]||0));
+
+  $('#ingHint').textContent = L().summary(list.length, LAB(state.stat), state.dir);
   const box = $('#ilist');
-  $('#ingHint').textContent = `共 ${list.length} 种 · 按${STAT_LABEL[state.stat]}${state.dir==='desc'?'从高到低':'从低到高'}`;
   if(!list.length){
-    box.innerHTML = `<div class="empty">没找到这个食材。<br>试试 <b>浆果</b>、<b>火龙果</b>、<b>怪物肉</b>。</div>`;
+    box.innerHTML = `<div class="empty">${L().emptyIng}</div>`;
     return;
   }
   box.innerHTML = list.map(i => {
@@ -426,65 +507,74 @@ function renderIng(){
       const numCls = val < 0 ? 'neg' : (val === 0 ? 'zero' : '');
       return `<div class="stat">
         <span class="num ${numCls}">${val>0?'+':''}${fmt(val)}</span>
-        <span class="bar ${cls}"><i class="${val<0?'negfill':''}" style="width:${(w*100).toFixed(1)}%;animation-delay:${Math.random()*0.08}s"></i></span>
+        <span class="bar ${cls}"><i class="${val<0?'negfill':''}" style="width:${(w*100).toFixed(1)}%;animation-delay:${(Math.random()*0.08).toFixed(2)}s"></i></span>
       </div>`;
     };
     return `<button class="irow" data-name="${i.n}" aria-selected="${sel}">
-      <div class="iname"><span class="nm">${i.n}</span><span class="cat">${i.cat}</span></div>
+      <div class="iname"><span class="nm">${nm(i)}</span><span class="cat">${catName(i.cat)}</span></div>
       ${cell(i.h,'h')}${cell(i.p,'p')}${cell(i.s,'s')}
     </button>`;
   }).join('');
 }
 
-/* ============ 菜肴渲染 ============ */
+/* ================= dishes ================= */
 function dishMatches(d){
   if(state.sel && !d.uses.includes(state.sel)) return false;
   if(!state.q) return true;
   const q = state.q.toLowerCase();
-  return d.n.toLowerCase().includes(q) || d.need.toLowerCase().includes(q) || d.uses.some(u => u.toLowerCase().includes(q));
+  return d.n.toLowerCase().includes(q) || d.e.toLowerCase().includes(q)
+      || d.need.toLowerCase().includes(q) || d.needE.toLowerCase().includes(q)
+      || d.uses.some(u => u.toLowerCase().includes(q) || ingName(u).toLowerCase().includes(q));
 }
 
 function renderDish(){
-  let list = DISH.filter(dishMatches);
-  const k = KEY[state.dstat];
-  list.sort((a,b) => state.ddir === 'desc' ? b[k] - a[k] : a[k] - b[k]);
+  const list = DISH.filter(dishMatches).sort((a,b) => {
+    const k = KEY[state.dstat];
+    return state.ddir === 'desc' ? b[k] - a[k] : a[k] - b[k];
+  });
 
-  $('#dishTitle').innerHTML = `菜肴配方 <small>${state.sel ? '含「'+state.sel+'」' : (state.q ? '搜索：'+state.q : '全部')} · ${list.length} 道</small>`;
+  const selName = state.sel ? ingName(state.sel) : '';
+  $('#dishTitle').innerHTML = `${L().dish} <small>${L().dishTitle(selName, state.q, list.length)}</small>`;
 
   const box = $('#rlist');
   if(!list.length){
-    box.innerHTML = `<div class="empty">还没找到能做的菜。<br>换个食材，或者清空搜索看看全部配方。</div>`;
-    if(state.sel || state.q) box.innerHTML += `<div class="resetwrap"><button class="resetbtn" data-reset="1">查看全部 ${DISH.length} 道菜</button></div>`;
+    box.innerHTML = `<div class="empty">${L().emptyDish}</div>` +
+      ((state.sel || state.q) ? `<div class="resetwrap"><button class="resetbtn" data-reset="1">${L().showAll(DISH.length)}</button></div>` : '');
   } else {
     box.innerHTML = list.map(d => {
-      const st = [['饥饿',d.h,'h'],['生命',d.p,'p'],['理智',d.s,'s']].map(([lab,v,cls]) => {
+      const st = [['hunger',d.h],['health',d.p],['sanity',d.s]].map(([stat,v]) => {
+        const cls = stat === 'hunger' ? 'h' : stat === 'health' ? 'p' : 's';
         const w = Math.max(0, Math.min(1, Math.abs(v) / DMAX[cls]));
         return `<div class="dstat">
-          <div class="lab"><span>${lab}</span><b>${v>0?'+':''}${fmt(v)}</b></div>
+          <div class="lab"><span>${LAB(stat)}</span><b>${v>0?'+':''}${fmt(v)}</b></div>
           <div class="track"><i style="width:${(w*100).toFixed(1)}%;background:var(--${cls});opacity:${v<0?.55:1}"></i></div>
         </div>`;
       }).join('');
-      const chips = d.uses.map(u => `<span class="chip ${state.sel===u?'on':''}" data-ing="${u}">${u}</span>`).join('');
+      const chips = d.uses.map(u => `<span class="chip ${state.sel===u?'on':''}" data-ing="${u}">${ingName(u)}</span>`).join('');
       return `<article class="dish">
-        <div class="row1"><h3>${d.n}</h3><span class="prio">优先度 ${d.prio}</span></div>
+        <div class="row1"><h3>${nm(d)}</h3><span class="prio">${L().priority} ${d.prio}</span></div>
         <div class="dstats">${st}</div>
-        <p class="need">${d.need}</p>
+        <p class="need">${lang === 'zh' ? d.need : d.needE}</p>
         <div class="chips">${chips}</div>
       </article>`;
-    }).join('') + (state.sel || state.q
-      ? `<div class="resetwrap"><button class="resetbtn" data-reset="1">查看全部 ${DISH.length} 道菜</button></div>`
+    }).join('') + ((state.sel || state.q)
+      ? `<div class="resetwrap"><button class="resetbtn" data-reset="1">${L().showAll(DISH.length)}</button></div>`
       : '');
   }
   renderHero();
+  applyStatic();
 }
 
-/* ============ 选中食材的三维大图 ============ */
+/* ================= hero ================= */
 function renderHero(){
   const hero = $('#hero');
   const i = ING.find(x => x.n === state.sel);
   if(!i){ hero.classList.remove('show'); hero.innerHTML = ''; return; }
   hero.classList.add('show');
-  const cols = [['饥饿',i.h,'h'],['生命',i.p,'p'],['理智',i.s,'s']].map(([lab,v,cls]) => {
+
+  const cols = ['hunger','health','sanity'].map(stat => {
+    const v = i[KEY[stat]];
+    const cls = stat === 'hunger' ? 'h' : stat === 'health' ? 'p' : 's';
     const pct = Math.max(3, Math.min(100, Math.abs(v) / IMAX[cls] * 100));
     const vcls = v < 0 ? 'neg' : (v === 0 ? 'zero' : '');
     return `<div class="col">
@@ -493,22 +583,32 @@ function renderHero(){
         <div class="negz">${v<0 ? `<div class="fill ${cls} neg" style="height:${pct}%"></div>` : ''}</div>
       </div>
       <div class="val ${vcls}">${v>0?'+':''}${fmt(v)}</div>
-      <div class="cap">${lab}</div>
+      <div class="cap">${LAB(stat)}</div>
     </div>`;
   }).join('');
+
+  const meta = [lang === 'zh' ? i.w : i.we, (lang === 'zh' ? '腐坏 ' : 'Spoils in ') + (lang === 'zh' ? i.life : i.lifeE)]
+    .concat(i.note ? [lang === 'zh' ? i.note : i.noteE] : []).join(' · ');
+
   hero.innerHTML = `<div class="hero-top">
-      <h3>${i.n} <span class="cat" style="font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 5px;vertical-align:2px">${i.cat}</span></h3>
-      <button class="close" id="unsel">取消选中</button>
+      <h3>${nm(i)} <span class="cat" style="font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 5px;vertical-align:2px">${catName(i.cat)}</span></h3>
+      <button class="close" id="unsel">${L().cancel}</button>
     </div>
-    <p>${i.w} · 腐坏 ${i.life}${i.note ? ' · ' + i.note : ''}</p>
+    <p>${meta}</p>
     <div class="chart">${cols}</div>`;
 }
 
-/* ============ 事件 ============ */
+/* ================= events ================= */
 document.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-role],[data-name],[data-ing],#unsel,.thead .th,[data-reset]');
+  const t = e.target.closest('[data-role],[data-name],[data-ing],#unsel,.thead .th,[data-reset],#langBtn');
   if(!t) return;
 
+  if(t.id === 'langBtn'){
+    lang = lang === 'zh' ? 'en' : 'zh';
+    localStorage.setItem(LANG_KEY, lang);
+    renderSorts(); renderIng(); renderDish(); applyStatic();
+    return;
+  }
   if(t.dataset.reset){ state.sel = null; state.q = ''; $('#q').value = ''; renderIng(); renderDish(); return; }
   if(t.id === 'unsel'){ state.sel = null; renderIng(); renderDish(); return; }
 
@@ -530,7 +630,6 @@ document.addEventListener('click', (e) => {
   if(t.dataset.name){
     state.sel = state.sel === t.dataset.name ? null : t.dataset.name;
     renderIng(); renderDish();
-    if(state.sel) document.querySelector('#hero')?.scrollIntoView({block:'nearest', behavior:'smooth'});
     return;
   }
   if(t.dataset.ing){
@@ -549,12 +648,17 @@ document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape'){ state.q = ''; $('#q').value = ''; state.sel = null; renderIng(); renderDish(); $('#q').blur(); }
 });
 
-/* ============ 启动 ============ */
+/* ================= boot ================= */
 (function init(){
-  const pre = new URLSearchParams(location.search).get('ing');
+  const qp = new URLSearchParams(location.search);
+  if(qp.get('lang') === 'en'){ lang = 'en'; }
+  if(qp.get('lang') === 'zh'){ lang = 'zh'; }
+  const pre = qp.get('ing');
   if(pre && ING.some(i => i.n === pre)) state.sel = pre;
 })();
-renderSorts();$('#statIng').textContent = ING.length; $('#statDish').textContent = DISH.length; renderIng(); renderDish();
+$('#statIng').textContent = ING.length;
+$('#statDish').textContent = DISH.length;
+applyStatic(); renderSorts(); renderIng(); renderDish();
 </script>
 </body>
 </html>
