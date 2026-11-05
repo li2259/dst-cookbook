@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>饥荒烹饪手册 · 食材三维 &amp; 配方速查</title>
+<style>
+  :root{
+    --bg:#0e0b09;
+    --bg2:#141010;
+    --panel:#1a1411;
+    --panel2:#211a15;
+    --line:#352a22;
+    --line2:#46372c;
+    --ink:#f4ebdd;
+    --muted:#a08e7c;
+    --dim:#6f6055;
+    --ember:#ff8a3d;
+    --ember2:#ffb570;
+    --hunger:#f2a33c;
+    --health:#e2574c;
+    --sanity:#9d8bf5;
+    --ok:#7dbb6a;
+    --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+    --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:
+      radial-gradient(1100px 520px at 18% -12%, rgba(255,138,61,.13), transparent 62%),
+      radial-gradient(900px 480px at 92% 8%, rgba(157,139,245,.08), transparent 60%),
+      linear-gradient(180deg,#141010 0%, #0e0b09 46%, #0b0908 100%);
+    color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='.6'/></svg>");
+    mix-blend-mode:overlay;
+  }
+  .wrap{position:relative;z-index:1;max-width:1340px;margin:0 auto;padding:26px 22px 40px}
+
+  /* ---------- header ---------- */
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:14px}
+  .crest{
+    width:46px;height:46px;flex:0 0 46px;border-radius:50%;
+    background:radial-gradient(circle at 34% 30%, #ffd7a8, #ff8a3d 42%, #b1461a 74%, #5b2410);
+    box-shadow:0 0 0 1px #4a2d1c, 0 0 26px rgba(255,138,61,.34), inset -3px -5px 10px rgba(0,0,0,.45);
+    position:relative;
+  }
+  .crest::after{content:"";position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 50% 70%, rgba(255,190,120,.9), transparent 68%);filter:blur(2px)}
+  h1{font-family:var(--serif);font-size:27px;letter-spacing:.09em;margin:0;font-weight:700;
+     background:linear-gradient(180deg,#fff2df,#c9a486 70%,#8d6c52);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{margin:5px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:.16em;display:flex;align-items:center;gap:9px}
+  .tag{font-size:10.5px;letter-spacing:.14em;padding:2px 7px;border:1px solid var(--line2);border-radius:999px;color:var(--ember2);background:rgba(255,138,61,.07)}
+
+  .searchwrap{position:relative;flex:1 1 340px;max-width:430px}
+  .searchwrap input{
+    width:100%;padding:13px 44px 13px 42px;border-radius:12px;border:1px solid var(--line2);
+    background:linear-gradient(180deg,#241c17,#191312);color:var(--ink);font-size:14px;font-family:var(--sans);
+    outline:none;transition:.18s;box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px rgba(0,0,0,.35);
+  }
+  .searchwrap input::placeholder{color:var(--dim)}
+  .searchwrap input:focus{border-color:#7a5636;box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 3px rgba(255,138,61,.12)}
+  .searchwrap .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--dim)}
+  .searchwrap kbd{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    font:11px/1 var(--sans);color:var(--dim);border:1px solid var(--line2);border-bottom-width:2px;
+    border-radius:5px;padding:4px 6px;background:#171210;
+  }
+
+  /* ---------- meta strip ---------- */
+  .meta{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:13px 2px 16px;font-size:12px;color:var(--dim);letter-spacing:.04em}
+  .meta b{color:var(--muted);font-weight:600}
+  .dot{width:4px;height:4px;border-radius:50%;background:var(--line2);display:inline-block}
+
+  /* ---------- layout ---------- */
+  main{display:grid;grid-template-columns:minmax(400px,.92fr) 1.08fr;gap:18px;align-items:stretch}
+  @media (max-width:1040px){ main{grid-template-columns:minmax(0,1fr)} }
+  .panel{
+    background:linear-gradient(180deg,rgba(33,26,21,.92),rgba(23,18,15,.92));
+    border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:0 18px 40px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.035);
+    display:flex;flex-direction:column;min-width:0;
+    height:calc(100vh - 252px);min-height:560px;max-height:820px;
+  }
+  @media (max-width:1040px){ .panel{height:auto;max-height:none;min-height:0} }
+  @media (max-width:720px){
+    .wrap{padding:18px 12px 34px}
+    .thead,.irow{padding-left:12px;padding-right:12px;gap:6px}
+    .stat{gap:5px}
+    .stat .num{min-width:29px;font-size:11.5px}
+    .iname .cat{display:none}
+    .searchwrap{max-width:none}
+    .chart{gap:24px;padding-left:2px}
+    .hero{padding:14px 14px 8px}
+    h1{font-size:23px}
+  }
+  .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .phead h2{font-family:var(--serif);font-size:16px;margin:0;letter-spacing:.08em;font-weight:600;display:flex;align-items:baseline;gap:9px}
+  .phead h2 small{font-family:var(--sans);font-size:11.5px;color:var(--dim);letter-spacing:.06em;font-weight:400}
+
+  .sorts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .sbtn{
+    font:12px/1 var(--sans);letter-spacing:.05em;color:var(--muted);background:#1d1613;
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;transition:.16s;
+    display:flex;align-items:center;gap:5px;
+  }
+  .sbtn:hover{color:var(--ink);border-color:var(--line2);background:#241c17}
+  .sbtn[aria-pressed="true"]{color:#1a1108;background:linear-gradient(180deg,var(--ember2),var(--ember));border-color:#ff9d55;font-weight:600;box-shadow:0 4px 14px rgba(255,138,61,.28)}
+  .sbtn .k{width:7px;height:7px;border-radius:2px;background:currentColor;opacity:.85}
+  .dirbtn{min-width:74px;justify-content:center;font-variant-numeric:tabular-nums}
+
+  /* ---------- ingredient table ---------- */
+  .thead,.irow{display:grid;grid-template-columns:minmax(96px,1.18fr) 1fr 1fr 1fr;gap:8px;align-items:center}
+  .thead{padding:9px 16px;font-size:11px;letter-spacing:.14em;color:var(--dim);border-bottom:1px solid var(--line);background:rgba(0,0,0,.18)}
+  .thead span:first-child{padding-left:2px}
+  .thead .th{cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;transition:.15s;padding:2px 0}
+  .thead .th:hover{color:var(--ink)}
+  .thead .th.on{color:var(--ember2)}
+  .thead .th .ar{font-size:9px;opacity:.75}
+  .ilist{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+  .ilist::-webkit-scrollbar{width:8px}
+  .ilist::-webkit-scrollbar-thumb{background:#3a2d24;border-radius:9px}
+  .ilist::-webkit-scrollbar-track{background:transparent}
+
+  .irow{
+    width:100%;text-align:left;font:inherit;color:inherit;background:transparent;border:0;
+    border-bottom:1px solid rgba(53,42,34,.55);padding:9px 16px;cursor:pointer;
+    transition:background .15s, box-shadow .15s;
+  }
+  .irow:hover{background:rgba(255,138,61,.055)}
+  .irow[aria-selected="true"]{background:linear-gradient(90deg,rgba(255,138,61,.16),rgba(255,138,61,.03));box-shadow:inset 3px 0 0 var(--ember)}
+  .iname{display:flex;align-items:center;gap:8px;min-width:0}
+  .iname .nm{font-size:13.5px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .iname .cat{font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 4px;flex:0 0 auto}
+  .irow[aria-selected="true"] .iname .cat{color:var(--ember2);border-color:#5b3a24}
+
+  .stat{display:flex;align-items:center;gap:7px;min-width:0}
+  .stat .num{font-size:12.5px;font-variant-numeric:tabular-nums;letter-spacing:.02em;min-width:38px;color:#e6d9c8}
+  .stat .num.neg{color:#f08a80}
+  .stat .num.zero{color:var(--dim)}
+  .bar{
+    position:relative;flex:1;height:9px;border-radius:2px;background:rgba(255,255,255,.045);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.5);overflow:hidden;min-width:18px;
+  }
+  .bar i{
+    display:block;height:100%;border-radius:2px;
+    transform-origin:left center;animation:grow .5s cubic-bezier(.2,.8,.3,1) both;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.22);
+  }
+  .bar i::after{
+    content:"";position:absolute;right:0;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.5;border-radius:2px;
+  }
+  .bar.h i{background:linear-gradient(180deg,#ffc271,var(--hunger) 55%,#a35f13)}
+  .bar.p i{background:linear-gradient(180deg,#ff8b7f,var(--health) 55%,#8f2b24)}
+  .bar.s i{background:linear-gradient(180deg,#c6b9ff,var(--sanity) 55%,#5c4aa8)}
+  .bar i.negfill{
+    background:repeating-linear-gradient(45deg,rgba(226,87,76,.75) 0 3px,rgba(120,45,38,.55) 3px 6px);
+    box-shadow:none;
+  }
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+  /* ---------- selected ingredient hero ---------- */
+  .hero{padding:15px 18px 10px;border-bottom:1px solid var(--line);display:none}
+  .hero.show{display:block;animation:fade .28s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .hero-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .hero h3{margin:0;font-family:var(--serif);font-size:18px;letter-spacing:.05em}
+  .hero .close{background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;font-size:11px;padding:4px 8px;cursor:pointer;transition:.15s}
+  .hero .close:hover{color:var(--ink);border-color:var(--line2);background:#241c17}
+  .hero p{margin:3px 0 0;font-size:11.5px;color:var(--muted)}
+  .chart{position:relative;display:flex;align-items:flex-end;gap:44px;height:150px;margin:4px 0 0;padding:0 6px 0 12px}
+  .chart::after{content:"";position:absolute;left:6px;right:6px;bottom:82px;height:1px;background:linear-gradient(90deg,rgba(74,56,43,0) 0,#4a382b 10%,#4a382b 88%,rgba(74,56,43,0) 100%)}
+  .chart .col{position:relative;width:60px;height:100%}
+  .chart .plot{position:absolute;left:0;right:0;top:4px;bottom:44px;display:flex;flex-direction:column}
+  .chart .pos{flex:0 0 62%;display:flex;align-items:flex-end;justify-content:center}
+  .chart .negz{flex:1;display:flex;align-items:flex-start;justify-content:center}
+  .chart .fill{
+    position:relative;width:24px;min-height:3px;border-radius:3px 3px 1px 1px;
+    box-shadow:7px 0 0 rgba(0,0,0,.36), inset 0 2px 0 rgba(255,255,255,.42), inset -2px 0 0 rgba(0,0,0,.2);
+    animation:rise .5s cubic-bezier(.2,.85,.3,1) both;transform-origin:bottom center;
+  }
+  @keyframes rise{from{transform:scaleY(.03)}to{transform:scaleY(1)}}
+  .chart .fill.h{background:linear-gradient(180deg,#ffc77f,var(--hunger) 55%,#a1600f)}
+  .chart .fill.p{background:linear-gradient(180deg,#ff9d92,var(--health) 55%,#82261f)}
+  .chart .fill.s{background:linear-gradient(180deg,#cabcff,var(--sanity) 55%,#534199)}
+  .chart .fill.neg{
+    background:repeating-linear-gradient(45deg,rgba(226,87,76,.62) 0 5px,rgba(96,38,32,.55) 5px 10px);
+    box-shadow:7px 0 0 rgba(0,0,0,.32);border-radius:1px 1px 3px 3px;transform-origin:top center;
+  }
+  .chart .val{position:absolute;left:-6px;right:-6px;bottom:25px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1}
+  .chart .val.neg{color:#f08a80}
+  .chart .val.zero{color:var(--dim)}
+  .chart .cap{position:absolute;left:-6px;right:-6px;bottom:7px;text-align:center;font-size:10.5px;color:var(--dim);letter-spacing:.1em;line-height:1}
+
+  /* ---------- recipes ---------- */
+  .rlist{flex:1;min-height:0;overflow-y:auto;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+  .rlist::-webkit-scrollbar{width:8px}
+  .rlist::-webkit-scrollbar-thumb{background:#3a2d24;border-radius:9px}
+  @media (max-width:620px){ .rlist{grid-template-columns:1fr} }
+
+  .dish{
+    position:relative;background:linear-gradient(180deg,#241c17,#1b1512);
+    border:1px solid var(--line);border-radius:12px;padding:12px 13px 11px;
+    transition:transform .18s, border-color .18s, box-shadow .18s;
+    animation:fade .3s ease both;
+  }
+  .dish:hover{transform:translateY(-2px);border-color:#5a4433;box-shadow:0 12px 26px rgba(0,0,0,.4)}
+  .dish .row1{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .dish h3{margin:0;font-family:var(--serif);font-size:15.5px;letter-spacing:.04em;font-weight:600}
+  .prio{font-size:10px;color:var(--dim);letter-spacing:.08em;white-space:nowrap}
+  .dstats{display:flex;gap:10px;margin:9px 0 8px}
+  .dstat{flex:1;min-width:0}
+  .dstat .lab{font-size:9.5px;letter-spacing:.12em;color:var(--dim);display:flex;justify-content:space-between;gap:4px}
+  .dstat .lab b{font-weight:600;font-variant-numeric:tabular-nums;color:#e8dccb;font-size:11.5px}
+  .dstat .track{height:5px;border-radius:2px;background:rgba(255,255,255,.05);margin-top:4px;overflow:hidden}
+  .dstat .track i{display:block;height:100%;border-radius:2px;animation:grow .5s cubic-bezier(.2,.8,.3,1) both}
+  .need{font-size:11.5px;color:var(--muted);margin:0 0 9px;line-height:1.5}
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{font-size:10.5px;color:#bda893;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06);border-radius:5px;padding:2.5px 6px;cursor:pointer;transition:.14s}
+  .chip:hover{color:var(--ink);border-color:var(--line2);background:rgba(255,138,61,.12)}
+  .chip.on{color:#21160d;background:linear-gradient(180deg,var(--ember2),var(--ember));border-color:#ff9d55;font-weight:600}
+  .chip.empty{opacity:.6;cursor:default}
+
+  .empty{padding:44px 20px;text-align:center;color:var(--dim);font-size:13px;line-height:1.8;grid-column:1/-1}
+  .empty b{color:var(--muted)}
+  .resetwrap{grid-column:1/-1;padding:6px 0 2px;display:flex;justify-content:center}
+  .resetbtn{
+    font:12px/1 var(--sans);letter-spacing:.06em;color:var(--muted);background:rgba(255,255,255,.03);
+    border:1px dashed var(--line2);border-radius:9px;padding:10px 16px;cursor:pointer;transition:.16s
+  }
+  .resetbtn:hover{color:var(--ink);border-style:solid;background:rgba(255,138,61,.1);border-color:#7a5636}
+
+  footer{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);color:var(--dim);font-size:11.5px;line-height:1.9;letter-spacing:.02em}
+  footer b{color:var(--muted);font-weight:600}
+
+  ::selection{background:rgba(255,138,61,.3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="crest" aria-hidden="true"></div>
+      <div>
+        <h1>饥荒烹饪手册</h1>
+        <p class="sub">食材三维 · 配方速查 <span class="tag">联机版</span></p>
+      </div>
+    </div>
+    <div class="searchwrap">
+      <span class="ico">⌕</span>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="搜食材或菜名：浆果 / 火龙果 / 肉丸" aria-label="搜索" />
+      <kbd>/</kbd>
+    </div>
+  </header>
+
+  <div class="meta">
+    <span><b id="statIng">0</b> 种食材</span><span class="dot"></span>
+    <span><b id="statDish">0</b> 道菜肴</span><span class="dot"></span>
+    <span>点表头按饥饿 / 生命 / 理智 排序，点食材看它能做什么菜</span>
+  </div>
+
+  <main>
+    <!-- 食材 -->
+    <section class="panel" aria-label="食材表">
+      <div class="phead">
+        <h2>食材 <small id="ingHint">按饥饿值从高到低</small></h2>
+        <div class="sorts" id="ingSorts"></div>
+      </div>
+      <div class="thead">
+        <span>食材</span>
+        <span class="th" data-stat="hunger"><i class="k" style="background:var(--hunger)"></i>饥饿<b class="ar"></b></span>
+        <span class="th" data-stat="health"><i class="k" style="background:var(--health)"></i>生命<b class="ar"></b></span>
+        <span class="th" data-stat="sanity"><i class="k" style="background:var(--sanity)"></i>理智<b class="ar"></b></span>
+      </div>
+      <div class="ilist" id="ilist"></div>
+    </section>
+
+    <!-- 菜肴 -->
+    <section class="panel" aria-label="菜肴表">
+      <div class="phead">
+        <h2 id="dishTitle">菜肴配方 <small id="dishHint">全部</small></h2>
+        <div class="sorts" id="dishSorts"></div>
+      </div>
+      <div class="hero" id="hero"></div>
+      <div class="rlist" id="rlist"></div>
+    </section>
+  </main>
+
+  <footer>
+    <b>数据说明</b>：数值参考《饥荒：联机版》烹饪锅与社区资料整理（生存三维 = 饥饿 / 生命 / 理智），角色、版本与某些特殊食材会带来差异；「需求」写的是烹饪锅判定条件，不是唯一配方，同类食材可以互换。<br />
+    <b>用法</b>：点表头切换排序方向；输入食材名可定位食材并列出相关菜；点菜肴里的食材小标签可反查这个食材。数值为 0 的食材多作填充或不可直接食用。
+  </footer>
+</div>
+
+<script>
+/* ============ 食材：生存三维 ============ */
+/* hunger=饥饿 health=生命 sanity=理智 ; w=烹饪权重说明 ; life=腐坏天数 */
+const ING = [
+  {n:'大肉',    cat:'肉', h:25,   p:3,   s:0,  w:'肉 1',    life:'8 天', note:'烤熟更好存'},
+  {n:'小肉',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天'},
+  {n:'鸡腿',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天'},
+  {n:'火鸡腿',  cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天', note:'不能烤，直接下锅'},
+  {n:'蛙腿',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉 0.5',  life:'6 天'},
+  {n:'鱼',      cat:'肉', h:12.5, p:1,   s:0,  w:'肉(鱼) 1 鱼度', life:'4 天'},
+  {n:'鳗鱼',    cat:'肉', h:12.5, p:1,   s:0,  w:'肉(鱼) 0.5', life:'4 天'},
+  {n:'怪物肉',  cat:'肉', h:18.8, p:-20, s:-15,w:'肉 1（怪物肉）', life:'6 天', note:'≥2 块必出怪物千层面'},
+  {n:'蛋',      cat:'蛋', h:12.5, p:1,   s:0,  w:'蛋 1',    life:'10 天'},
+  {n:'蜂蜜',    cat:'甜', h:12.5, p:3,   s:0,  w:'甜味剂 1', life:'40 天'},
+  {n:'黄油',    cat:'乳', h:12.5, p:0,   s:0,  w:'乳制品 1', life:'40 天'},
+  {n:'浆果',    cat:'果', h:9.4,  p:0,   s:0,  w:'水果 0.5', life:'6 天'},
+  {n:'多汁浆果',cat:'果', h:12.5, p:1,   s:0,  w:'水果 1',   life:'2 天'},
+  {n:'火龙果',  cat:'果', h:25,   p:3,   s:0,  w:'水果 1',   life:'10 天', note:'唯一能做出 40 生命菜的水果'},
+  {n:'西瓜',    cat:'果', h:12.5, p:3,   s:5,  w:'水果 1',   life:'12 天'},
+  {n:'石榴',    cat:'果', h:9.4,  p:3,   s:0,  w:'水果 1',   life:'10 天'},
+  {n:'榴莲',    cat:'果', h:25,   p:-3,  s:-5, w:'水果 1',   life:'10 天'},
+  {n:'洞穴香蕉',cat:'果', h:12,   p:1,   s:0,  w:'水果 1',   life:'10 天'},
+  {n:'胡萝卜',  cat:'菜', h:12.5, p:1,   s:0,  w:'蔬菜 1',   life:'10 天'},
+  {n:'玉米',    cat:'菜', h:25,   p:3,   s:0,  w:'蔬菜 1',   life:'10 天'},
+  {n:'南瓜',    cat:'菜', h:37.5, p:3,   s:0,  w:'蔬菜 1',   life:'10 天', note:'饥饿最高的蔬菜'},
+  {n:'茄子',    cat:'菜', h:25,   p:3,   s:0,  w:'蔬菜 1',   life:'10 天'},
+  {n:'土豆',    cat:'菜', h:12.5, p:1,   s:0,  w:'蔬菜 1',   life:'10 天'},
+  {n:'爆米花',  cat:'菜', h:12.5, p:3,   s:0,  w:'蔬菜 1',   life:'10 天'},
+  {n:'烤南瓜',  cat:'菜', h:37.5, p:8,   s:0,  w:'蔬菜 1',   life:'6 天'},
+  {n:'烤胡萝卜',cat:'菜', h:12.5, p:3,   s:0,  w:'蔬菜 1',   life:'6 天'},
+  {n:'烤浆果',  cat:'果', h:12.5, p:1,   s:0,  w:'水果 0.5', life:'3 天'},
+  {n:'曼德拉草',cat:'果', h:0,    p:0,   s:0,  w:'曼德拉草 1', life:'12 天', note:'生吃会昏睡，下锅才成汤'},
+  {n:'桦树果',  cat:'果', h:9.4,  p:0,   s:0,  w:'坚果 1',   life:'20 天'},
+  {n:'冰',      cat:'其他', h:0,  p:0,   s:0,  w:'冰 1',     life:'—', note:'不可直接吃，降温料理要用'},
+  {n:'树枝',    cat:'其他', h:0,  p:0,   s:0,  w:'不可食用', life:'—', note:'判定用，乱放会把菜做成烤肉串'},
+  {n:'蝴蝶翅膀',cat:'其他', h:8,  p:8,   s:0,  w:'其他 1',   life:'—'},
+  {n:'地衣',    cat:'菜', h:12.5, p:3,   s:-5, w:'蔬菜 1',   life:'2 天', note:'长在遗迹洞穴墙上，采完 5 天再长；生吃会掉理智'}
+];
+
+/* ============ 菜肴：三维 + 必要条件 ============ */
+const DISH = [
+  {n:'肉丸',        h:62.5, p:3,   s:5,   prio:'-1', need:'肉度 0.5–2.5，不能放树枝；最省肉的保底菜', uses:['大肉','小肉','怪物肉','浆果','胡萝卜','蛋']},
+  {n:'炖肉',        h:150,  p:12,  s:5,   prio:'0',  need:'肉度 ≥3，不能放树枝；大肉三块最稳', uses:['大肉','小肉']},
+  {n:'蜜汁火腿',    h:75,   p:30,  s:5,   prio:'2',  need:'蜂蜜 ≥1、肉度 ≥2，不能放树枝', uses:['蜂蜜','大肉','小肉']},
+  {n:'培根煎蛋',    h:75,   p:20,  s:5,   prio:'10', need:'蛋度 ≥2、肉度 ≥1.5，不能放蔬菜', uses:['蛋','大肉','小肉']},
+  {n:'火龙果派',    h:75,   p:40,  s:5,   prio:'1',  need:'火龙果 ≥1，不能放肉；40 生命的顶级菜', uses:['火龙果']},
+  {n:'波兰饺子',    h:37.5, p:40,  s:5,   prio:'5',  need:'蛋 ≥1、肉度 ≥0.5、蔬菜 ≥0.5，不能放树枝', uses:['蛋','小肉','胡萝卜','土豆']},
+  {n:'炸鱼排',      h:37.5, p:40,  s:5,   prio:'10', need:'鱼 ≥1、树枝 ≥1', uses:['鱼','树枝']},
+  {n:'奶油松饼',    h:37.5, p:60,  s:5,   prio:'10', need:'黄油 ≥1、蛋 ≥1、浆果 ≥1', uses:['黄油','蛋','浆果']},
+  {n:'蝴蝶蛋糕',    h:37.5, p:20,  s:5,   prio:'1',  need:'蝴蝶翅膀 ≥1、蔬菜 ≥0.5，不能放肉', uses:['蝴蝶翅膀','胡萝卜']},
+  {n:'墨西哥鱼饼',  h:37.5, p:20,  s:5,   prio:'10', need:'鱼 ≥1、玉米 ≥1', uses:['鱼','玉米']},
+  {n:'蛙腿三明治',  h:37.5, p:20,  s:5,   prio:'1',  need:'蛙腿 ≥1、蔬菜 ≥0.5', uses:['蛙腿','胡萝卜']},
+  {n:'蜜汁卤肉',    h:37.5, p:20,  s:5,   prio:'2',  need:'蜂蜜 ≥1、肉度 ≥0.5，不能放树枝', uses:['蜂蜜','小肉','鸡腿']},
+  {n:'西瓜冰',      h:12.5, p:3,   s:20,  prio:'10', need:'西瓜 ≥1、冰 ≥1，不能放肉/蛋/蔬菜；吃了降温', uses:['西瓜','冰']},
+  {n:'冰淇淋',      h:18.8, p:0,   s:33,  prio:'10', need:'乳制品 ≥1、冰 ≥1、甜味剂 ≥1；吃了降温', uses:['黄油','冰','蜂蜜']},
+  {n:'太妃糖',      h:25,   p:-3,  s:15,  prio:'10', need:'甜味剂 ≥3，不能放肉；理智换血的常用糖', uses:['蜂蜜']},
+  {n:'南瓜饼干',    h:37.5, p:0,   s:15,  prio:'10', need:'南瓜 ≥1、甜味剂 ≥2', uses:['南瓜','蜂蜜']},
+  {n:'烤肉串',      h:37.5, p:3,   s:5,   prio:'5',  need:'肉度 ≥0.5、树枝 ≥1，怪物肉 ≤1', uses:['小肉','鸡腿','树枝']},
+  {n:'怪物千层面',  h:37.5, p:-20, s:-20, prio:'10', need:'怪物肉 ≥2；饿的时候别乱煮', uses:['怪物肉']},
+  {n:'蔬菜杂烩',    h:25,   p:3,   s:5,   prio:'0',  need:'蔬菜 ≥0.5，不能放肉和树枝', uses:['胡萝卜','玉米','南瓜','茄子','土豆','浆果']},
+  {n:'果酱',        h:37.5, p:3,   s:5,   prio:'0',  need:'水果度 ≥1.5，不能放肉/蔬菜；4 颗浆果最省', uses:['浆果','西瓜','石榴','火龙果','洞穴香蕉','多汁浆果']},
+  {n:'水果杂烩',    h:25,   p:20,  s:5,   prio:'0',  need:'水果度 ≥3，不能放肉/蔬菜', uses:['浆果','火龙果','西瓜','石榴','榴莲','洞穴香蕉']},
+  {n:'火鸡大餐',    h:75,   p:20,  s:5,   prio:'10', need:'火鸡腿 ≥2、肉度 ≥0.5、水果 ≥0.5', uses:['火鸡腿','浆果','小肉']},
+  {n:'酿茄子',      h:37.5, p:3,   s:5,   prio:'1',  need:'茄子 ≥1、蔬菜 ≥0.5', uses:['茄子','胡萝卜']},
+  {n:'鳗鱼寿司',    h:18.8, p:20,  s:5,   prio:'20', need:'鳗鱼 ≥1、地衣 ≥1，剩 2 格可放树枝；优先度最高的料理之一', uses:['鳗鱼','地衣']},
+  {n:'曼德拉汤',    h:150,  p:100, s:5,   prio:'10', need:'曼德拉草 ≥1；曼德拉草不能先烤熟', uses:['曼德拉草']},
+  {n:'果仁杂烩',    h:12.5, p:30,  s:5,   prio:'10', need:'浆果 ≥1、坚果 ≥1，不能放肉/蛋/蔬菜', uses:['浆果','桦树果']},
+  {n:'华夫饼',      h:37.5, p:60,  s:5,   prio:'10', need:'黄油 ≥1、浆果 ≥1、蛋 ≥1', uses:['黄油','浆果','蛋']},
+  {n:'湿嗒嗒的一坨',h:0,    p:0,   s:0,   prio:'0',  need:'没有匹配到任何配方的失败品（例：4 个烤桦树果）', uses:['桦树果','树枝']}
+];
+
+/* ============ 状态 ============ */
+const state = { stat:'hunger', dir:'desc', q:'', sel:null, dstat:'hunger', ddir:'desc' };
+/* 条形长度参照各列最大值，保证整表可比较 */
+const IMAX = { h:37.5, p:20, s:15 };
+const DMAX = { h:150,  p:100, s:33 };
+const $ = (s) => document.querySelector(s);
+const fmt = (v) => (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
+
+const STAT_LABEL = { hunger:'饥饿', health:'生命', sanity:'理智' };
+const KEY = { hunger:'h', health:'p', sanity:'s' };
+
+/* ============ 排序控件 ============ */
+function renderSorts(){
+  const iS = $('#ingSorts'), dS = $('#dishSorts');
+  iS.innerHTML = ['hunger','health','sanity'].map(k =>
+    `<button class="sbtn" data-role="istat" data-stat="${k}" aria-pressed="${state.stat===k}">
+       <i class="k" style="background:var(--${k})"></i>${STAT_LABEL[k]}</button>`).join('') +
+    `<button class="sbtn dirbtn" data-role="idir">${state.dir==='desc'?'↓ 高到低':'↑ 低到高'}</button>`;
+  dS.innerHTML = ['hunger','health','sanity'].map(k =>
+    `<button class="sbtn" data-role="dstat" data-stat="${k}" aria-pressed="${state.dstat===k}">
+       <i class="k" style="background:var(--${k})"></i>${STAT_LABEL[k]}</button>`).join('') +
+    `<button class="sbtn dirbtn" data-role="ddir">${state.ddir==='desc'?'↓ 高到低':'↑ 低到高'}</button>`;
+
+  document.querySelectorAll('.thead .th').forEach(th => {
+    const on = th.dataset.stat === state.stat;
+    th.classList.toggle('on', on);
+    th.querySelector('.ar').textContent = on ? (state.dir === 'desc' ? '▼' : '▲') : '';
+  });
+}
+
+/* ============ 食材渲染 ============ */
+function ingMatches(i){
+  if(!state.q) return true;
+  const q = state.q.toLowerCase();
+  if(i.n.toLowerCase().includes(q) || i.cat.includes(state.q)) return true;
+  return DISH.some(d => d.uses.includes(i.n) && d.n.toLowerCase().includes(q));
+}
+
+function renderIng(){
+  const list = ING.filter(ingMatches);
+  const k = KEY[state.stat];
+  list.sort((a,b) => {
+    const va = a[k] ?? -1e9, vb = b[k] ?? -1e9;
+    return state.dir === 'desc' ? vb - va : va - vb;
+  });
+  const box = $('#ilist');
+  $('#ingHint').textContent = `共 ${list.length} 种 · 按${STAT_LABEL[state.stat]}${state.dir==='desc'?'从高到低':'从低到高'}`;
+  if(!list.length){
+    box.innerHTML = `<div class="empty">没找到这个食材。<br>试试 <b>浆果</b>、<b>火龙果</b>、<b>怪物肉</b>。</div>`;
+    return;
+  }
+  box.innerHTML = list.map(i => {
+    const sel = state.sel === i.n;
+    const cell = (val, cls) => {
+      const w = Math.max(0, Math.min(1, Math.abs(val) / IMAX[cls]));
+      const numCls = val < 0 ? 'neg' : (val === 0 ? 'zero' : '');
+      return `<div class="stat">
+        <span class="num ${numCls}">${val>0?'+':''}${fmt(val)}</span>
+        <span class="bar ${cls}"><i class="${val<0?'negfill':''}" style="width:${(w*100).toFixed(1)}%;animation-delay:${Math.random()*0.08}s"></i></span>
+      </div>`;
+    };
+    return `<button class="irow" data-name="${i.n}" aria-selected="${sel}">
+      <div class="iname"><span class="nm">${i.n}</span><span class="cat">${i.cat}</span></div>
+      ${cell(i.h,'h')}${cell(i.p,'p')}${cell(i.s,'s')}
+    </button>`;
+  }).join('');
+}
+
+/* ============ 菜肴渲染 ============ */
+function dishMatches(d){
+  if(state.sel && !d.uses.includes(state.sel)) return false;
+  if(!state.q) return true;
+  const q = state.q.toLowerCase();
+  return d.n.toLowerCase().includes(q) || d.need.toLowerCase().includes(q) || d.uses.some(u => u.toLowerCase().includes(q));
+}
+
+function renderDish(){
+  let list = DISH.filter(dishMatches);
+  const k = KEY[state.dstat];
+  list.sort((a,b) => state.ddir === 'desc' ? b[k] - a[k] : a[k] - b[k]);
+
+  $('#dishTitle').innerHTML = `菜肴配方 <small>${state.sel ? '含「'+state.sel+'」' : (state.q ? '搜索：'+state.q : '全部')} · ${list.length} 道</small>`;
+
+  const box = $('#rlist');
+  if(!list.length){
+    box.innerHTML = `<div class="empty">还没找到能做的菜。<br>换个食材，或者清空搜索看看全部配方。</div>`;
+    if(state.sel || state.q) box.innerHTML += `<div class="resetwrap"><button class="resetbtn" data-reset="1">查看全部 ${DISH.length} 道菜</button></div>`;
+  } else {
+    box.innerHTML = list.map(d => {
+      const st = [['饥饿',d.h,'h'],['生命',d.p,'p'],['理智',d.s,'s']].map(([lab,v,cls]) => {
+        const w = Math.max(0, Math.min(1, Math.abs(v) / DMAX[cls]));
+        return `<div class="dstat">
+          <div class="lab"><span>${lab}</span><b>${v>0?'+':''}${fmt(v)}</b></div>
+          <div class="track"><i style="width:${(w*100).toFixed(1)}%;background:var(--${cls});opacity:${v<0?.55:1}"></i></div>
+        </div>`;
+      }).join('');
+      const chips = d.uses.map(u => `<span class="chip ${state.sel===u?'on':''}" data-ing="${u}">${u}</span>`).join('');
+      return `<article class="dish">
+        <div class="row1"><h3>${d.n}</h3><span class="prio">优先度 ${d.prio}</span></div>
+        <div class="dstats">${st}</div>
+        <p class="need">${d.need}</p>
+        <div class="chips">${chips}</div>
+      </article>`;
+    }).join('') + (state.sel || state.q
+      ? `<div class="resetwrap"><button class="resetbtn" data-reset="1">查看全部 ${DISH.length} 道菜</button></div>`
+      : '');
+  }
+  renderHero();
+}
+
+/* ============ 选中食材的三维大图 ============ */
+function renderHero(){
+  const hero = $('#hero');
+  const i = ING.find(x => x.n === state.sel);
+  if(!i){ hero.classList.remove('show'); hero.innerHTML = ''; return; }
+  hero.classList.add('show');
+  const cols = [['饥饿',i.h,'h'],['生命',i.p,'p'],['理智',i.s,'s']].map(([lab,v,cls]) => {
+    const pct = Math.max(3, Math.min(100, Math.abs(v) / IMAX[cls] * 100));
+    const vcls = v < 0 ? 'neg' : (v === 0 ? 'zero' : '');
+    return `<div class="col">
+      <div class="plot">
+        <div class="pos">${v>0 ? `<div class="fill ${cls}" style="height:${pct}%"></div>` : ''}</div>
+        <div class="negz">${v<0 ? `<div class="fill ${cls} neg" style="height:${pct}%"></div>` : ''}</div>
+      </div>
+      <div class="val ${vcls}">${v>0?'+':''}${fmt(v)}</div>
+      <div class="cap">${lab}</div>
+    </div>`;
+  }).join('');
+  hero.innerHTML = `<div class="hero-top">
+      <h3>${i.n} <span class="cat" style="font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 5px;vertical-align:2px">${i.cat}</span></h3>
+      <button class="close" id="unsel">取消选中</button>
+    </div>
+    <p>${i.w} · 腐坏 ${i.life}${i.note ? ' · ' + i.note : ''}</p>
+    <div class="chart">${cols}</div>`;
+}
+
+/* ============ 事件 ============ */
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-role],[data-name],[data-ing],#unsel,.thead .th,[data-reset]');
+  if(!t) return;
+
+  if(t.dataset.reset){ state.sel = null; state.q = ''; $('#q').value = ''; renderIng(); renderDish(); return; }
+  if(t.id === 'unsel'){ state.sel = null; renderIng(); renderDish(); return; }
+
+  if(t.classList.contains('th') || t.dataset.role === 'istat'){
+    const s = t.dataset.stat;
+    if(state.stat === s) state.dir = state.dir === 'desc' ? 'asc' : 'desc';
+    else { state.stat = s; state.dir = 'desc'; }
+    renderSorts(); renderIng(); return;
+  }
+  if(t.dataset.role === 'idir'){ state.dir = state.dir === 'desc' ? 'asc' : 'desc'; renderSorts(); renderIng(); return; }
+  if(t.dataset.role === 'dstat'){
+    const s = t.dataset.stat;
+    if(state.dstat === s) state.ddir = state.ddir === 'desc' ? 'asc' : 'desc';
+    else { state.dstat = s; state.ddir = 'desc'; }
+    renderSorts(); renderDish(); return;
+  }
+  if(t.dataset.role === 'ddir'){ state.ddir = state.ddir === 'desc' ? 'asc' : 'desc'; renderSorts(); renderDish(); return; }
+
+  if(t.dataset.name){
+    state.sel = state.sel === t.dataset.name ? null : t.dataset.name;
+    renderIng(); renderDish();
+    if(state.sel) document.querySelector('#hero')?.scrollIntoView({block:'nearest', behavior:'smooth'});
+    return;
+  }
+  if(t.dataset.ing){
+    state.sel = state.sel === t.dataset.ing ? null : t.dataset.ing;
+    renderIng(); renderDish();
+  }
+});
+
+$('#q').addEventListener('input', (e) => {
+  state.q = e.target.value.trim();
+  renderIng(); renderDish();
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === '/' && document.activeElement !== $('#q')){ e.preventDefault(); $('#q').focus(); }
+  if(e.key === 'Escape'){ state.q = ''; $('#q').value = ''; state.sel = null; renderIng(); renderDish(); $('#q').blur(); }
+});
+
+/* ============ 启动 ============ */
+(function init(){
+  const pre = new URLSearchParams(location.search).get('ing');
+  if(pre && ING.some(i => i.n === pre)) state.sel = pre;
+})();
+renderSorts();$('#statIng').textContent = ING.length; $('#statDish').textContent = DISH.length; renderIng(); renderDish();
+</script>
+</body>
+</html>
