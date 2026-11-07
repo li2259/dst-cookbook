@@ -217,7 +217,7 @@
   .dstat{flex:1;min-width:0}
   .dstat .lab{font-size:9.5px;letter-spacing:.12em;color:var(--dim);display:flex;justify-content:space-between;gap:4px}
   .dstat .lab b{font-weight:600;font-variant-numeric:tabular-nums;color:#dfe9fb;font-size:11.5px}
-  .dstat .track{height:5px;border-radius:2px;background:rgba(255,255,255,.05);margin-top:4px;overflow:hidden}
+  .dstat .track{height:6px;border-radius:3px;background:rgba(255,255,255,.075);margin-top:4px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.45)}
   .dstat .track i{display:block;position:relative;height:100%;border-radius:2px;animation:grow .5s cubic-bezier(.2,.8,.3,1) both}
   .need{font-size:11.5px;color:var(--muted);margin:0 0 9px;line-height:1.5}
   .chips{display:flex;flex-wrap:wrap;gap:4px}
@@ -785,10 +785,11 @@ function renderDish(){
     box.innerHTML = list.map(d => {
       const st = [['hunger',d.h],['health',d.p],['sanity',d.s]].map(([stat,v]) => {
         const cls = stat === 'hunger' ? 'h' : stat === 'health' ? 'p' : 's';
-        const w = Math.max(0, Math.min(1, Math.abs(v) / DMAX[cls]));
+        const w = Math.max(0.02, Math.min(1, Math.abs(v) / DMAX[cls]));
+        const col = v < 0 ? 'var(--health)' : `var(--${stat})`;
         return `<div class="dstat">
           <div class="lab"><span>${LAB(stat)}</span><b>${v>0?'+':''}${fmt(v)}</b></div>
-          <div class="track"><i style="width:${(w*100).toFixed(1)}%;background:var(--${cls});opacity:${v<0?.55:1}"></i></div>
+          <div class="track"><i style="width:${(w*100).toFixed(1)}%;background:${col};opacity:${v<0?.6:1}"></i></div>
         </div>`;
       }).join('');
       const chips = d.uses.map(u => `<span class="chip ${state.sel===u?'on':''}" data-ing="${u}">${ingName(u)}</span>`).join('');
