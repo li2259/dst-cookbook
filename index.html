@@ -255,7 +255,7 @@
   }
   .fcard:hover{transform:translateY(-2px);border-color:#5a4433;box-shadow:0 12px 26px rgba(0,0,0,.4)}
   .fseeds{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-  .seedunit{display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;flex:0 0 64px}
+  .seedunit{display:flex;flex-direction:column;align-items:center;gap:3px;width:76px;flex:0 0 76px}
   .seedunit .sicon{
     width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
     background:radial-gradient(circle at 40% 30%,rgba(255,255,255,.12),rgba(255,255,255,.015));
@@ -264,7 +264,8 @@
   .seedunit .sicon svg{width:31px;height:31px;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
   .seedunit .sicon img{width:42px;height:42px;object-fit:contain;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.5));user-select:none}
   .seedunit .cnt{font-size:11.5px;color:var(--ember2);font-variant-numeric:tabular-nums;letter-spacing:.03em;font-weight:600}
-  .seedunit .cn{font-size:10px;color:var(--muted);white-space:normal;text-align:center;line-height:1.25;max-width:64px;word-break:break-word}
+  .seedunit .cn{font-size:10.5px;color:#ddcdb8;white-space:normal;text-align:center;line-height:1.25;max-width:76px;word-break:break-word}
+  .seedunit .sn{font-size:9.5px;color:var(--dim);white-space:normal;text-align:center;line-height:1.2;max-width:76px;word-break:break-word}
   .fmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10.5px;color:var(--dim)}
   .fmeta .pill{border:1px solid var(--line);border-radius:5px;padding:2.5px 6px;color:var(--muted);letter-spacing:.02em}
   .fmeta .pill.ok{color:#a2cf8b;border-color:#3d5334;background:rgba(125,187,106,.09)}
@@ -384,7 +385,7 @@ const S = {
     ntCrop: '作物', ntSeason: '适宜季节', ntWater: '耗水',
     nFormula: '催长剂', nCompost: '堆肥', nManure: '粪肥',
     water: { low:'低', med:'中', high:'高' },
-    swap: '同类作物可以互换：洋葱 ↔ 石榴、玉米 ↔ 芦笋、土豆 ↔ 茄子、胡萝卜 ↔ 南瓜、火龙果 ↔ 辣椒、榴莲 ↔ 大蒜。配比按 9–10 格的田算，换季前后记得先收一茬再改种。',
+    swap: '同类作物可以互换：洋葱 ↔ 石榴、玉米 ↔ 芦笋、土豆 ↔ 茄子、胡萝卜 ↔ 南瓜、火龙果 ↔ 辣椒、榴莲 ↔ 大蒜。配比按 9–10 格的田算，换季前后记得先收一茬再改种。种子的名字是按外形起的（毛茸茸的种子就是土豆），戴上耕作先驱帽右键作物就能永久看到种子类型。',
     foot: '<b>数据说明</b>：数值参考《饥荒：联机版》烹饪锅与社区资料整理（生存三维 = 饥饿 / 生命 / 理智），角色、版本与某些特殊食材会带来差异；「需求」写的是烹饪锅判定条件，不是唯一配方，同类食材可以互换。<br /><b>用法</b>：点表头切换排序方向；输入食材名可定位食材并列出相关菜；点菜肴里的食材小标签可反查这个食材。数值为 0 的食材多作填充或不可直接食用。'
   },
   en: {
@@ -409,7 +410,7 @@ const S = {
     ntCrop: 'Crop', ntSeason: 'Seasons', ntWater: 'Water',
     nFormula: 'Growth Formula', nCompost: 'Compost', nManure: 'Manure',
     water: { low:'Low', med:'Med', high:'High' },
-    swap: 'Interchangeable crops: Onion ↔ Pomegranate, Corn ↔ Asparagus, Potato ↔ Eggplant, Carrot ↔ Pumpkin, Dragon Fruit ↔ Pepper, Durian ↔ Garlic. Ratios assume a 9–10 slot plot; harvest before switching crops for the season.',
+    swap: 'Interchangeable crops: Onion ↔ Pomegranate, Corn ↔ Asparagus, Potato ↔ Eggplant, Carrot ↔ Pumpkin, Dragon Fruit ↔ Pepper, Durian ↔ Garlic. Ratios assume a 9–10 slot plot; harvest before switching crops for the season. Seeds are named after their shape (Fluffy Seeds = potato) — wear a Gardeneer Hat and right-click a crop to reveal seed types for good.',
     foot: '<b>Data</b>: values follow Don\'t Starve Together\'s crock pot and community references (the three stats are hunger / health / sanity). Characters, versions and special ingredients can shift things; “requirements” are the pot\'s checks, not the only recipe — similar ingredients swap freely.<br /><b>How to</b>: click a column header to flip the sort; type an ingredient to find its dishes; click an ingredient tag inside a card to look it up. Items with 0 stats are mostly filler or not edible raw.'
   }
 };
@@ -511,6 +512,14 @@ const CROPS = {
 };
 
 /* 每块田 9–10 格；同类作物可互换（洋葱/石榴、玉米/芦笋、土豆/茄子、胡萝卜/南瓜、火龙果/辣椒、榴莲/大蒜） */
+/* 作物种子在游戏里按外形命名，这里用中文俗称对照官方英文物品名 */
+const SEED_NAME = {
+  asparagus:'筒状种子', carrot:'椭圆形种子', corn:'簇状种子', eggplant:'漩涡种子',
+  garlic:'种子荚', onion:'尖形种子', pepper:'块状种子', potato:'毛茸茸的种子',
+  pumpkin:'尖种子', tomato:'带刺的种子', dragonfruit:'球茎状种子', durian:'脆籽荚',
+  pomegranate:'风刮来的种子', watermelon:'方形种子'
+};
+
 const FARM = [
   {mix:[['carrot',3],['corn',3],['potato',3]], safe:true},
   {mix:[['carrot',4],['corn',4],['dragonfruit',2]], safe:true},
@@ -743,7 +752,8 @@ function renderFarm(){
     const seeds = c.mix.map(([k, n]) => `<div class="seedunit">
         <div class="sicon">${seedSvg(k)}</div>
         <div class="cnt">×${n}</div>
-        <div class="cn">${lang === 'zh' ? CROPS[k].zh : CROPS[k].en}</div>
+        <div class="cn">${lang === 'zh' ? CROPS[k].zh : CROPS[k].en + ' Seeds'}</div>
+        ${lang === 'zh' ? `<div class="sn">${SEED_NAME[k]}</div>` : ''}
       </div>`).join('');
     return `<article class="fcard">
       <div class="fseeds">${seeds}</div>
