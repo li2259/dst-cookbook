@@ -307,8 +307,29 @@
   .nt td.pos{color:#93c97d}
   .nt .dotc{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px;vertical-align:0}
 
-  body.en .thead,body.en .irow{grid-template-columns:minmax(128px,1.45fr) 1fr 1fr 1fr}
-  @media (max-width:720px){
+  /* ---------- quick jump ---------- */
+  .jumpbar{
+    position:fixed;top:14px;left:50%;z-index:60;display:flex;gap:3px;align-items:center;
+    padding:5px;border-radius:999px;background:rgba(9,17,30,.88);border:1px solid var(--line2);
+    backdrop-filter:blur(12px);box-shadow:0 12px 34px rgba(0,0,0,.55);
+    transform:translate(-50%,-180%);opacity:0;pointer-events:none;
+    transition:transform .28s cubic-bezier(.2,.8,.3,1),opacity .2s;
+    max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none;
+  }
+  .jumpbar::-webkit-scrollbar{display:none}
+  .jumpbar.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+  .jumpbar button{
+    flex:0 0 auto;font:11.5px/1 var(--sans);letter-spacing:.05em;color:var(--muted);
+    background:transparent;border:1px solid transparent;border-radius:999px;padding:8px 13px;
+    cursor:pointer;transition:.16s;white-space:nowrap;
+  }
+  .jumpbar button:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+  .jumpbar button.on{color:#06101f;background:linear-gradient(180deg,var(--ember2),var(--ember));font-weight:700}
+  .jumpbar .sep{flex:0 0 1px;width:1px;height:16px;background:var(--line2);margin:0 3px}
+  section[id]{scroll-margin-top:80px}
+  @media (max-width:720px){ .jumpbar button{padding:7px 10px;font-size:11px} }
+
+  body.en .thead,body.en .irow{grid-template-columns:minmax(128px,1.45fr) 1fr 1fr 1fr}  @media (max-width:720px){
     .headright{flex:1 1 100%;max-width:none;justify-content:space-between}
     .searchwrap{max-width:none;flex:1}
     body.en .thead,body.en .irow{grid-template-columns:minmax(92px,1.15fr) 1fr 1fr 1fr}
@@ -391,6 +412,8 @@
     </div>
   </section>
 
+  <nav class="jumpbar" id="jumpbar" aria-label="quick jump"></nav>
+
   <footer id="foot"></footer>
 </div>
 
@@ -421,6 +444,7 @@ const S = {
     water: { low:'低', med:'中', high:'高' },
     swap: '同类作物可以互换：洋葱 ↔ 石榴、玉米 ↔ 芦笋、土豆 ↔ 茄子、胡萝卜 ↔ 南瓜、火龙果 ↔ 辣椒、榴莲 ↔ 大蒜。配比按 9–10 格的田算，换季前后记得先收一茬再改种。种子的名字是按外形起的（毛茸茸的种子就是土豆），戴上耕作先驱帽右键作物就能永久看到种子类型。',
     fish: '钓鱼', fishHint: '浅海 / 中海 / 深海有什么鱼，用什么饵',
+    nav: { ing:'食材', dish:'菜肴', farm:'种地', fish:'钓鱼', top:'顶部' },
     zoneNote: { shallow:'海面偏亮绿，公牛海带、瓶中信多', medium:'蓝绿色，礁石和一角鲸开始出现', deep:'深蓝，礁石更多，鱼也更大' },
     special: '中海鱼群刷新时，有概率刷出一角鲸（10%）或岩石大白鲨（7.5%）。',
     baitTitle: '饵料怎么选',
@@ -457,6 +481,7 @@ const S = {
     water: { low:'Low', med:'Med', high:'High' },
     swap: 'Interchangeable crops: Onion ↔ Pomegranate, Corn ↔ Asparagus, Potato ↔ Eggplant, Carrot ↔ Pumpkin, Dragon Fruit ↔ Pepper, Durian ↔ Garlic. Ratios assume a 9–10 slot plot; harvest before switching crops for the season. Seeds are named after their shape (Fluffy Seeds = potato) — wear a Gardeneer Hat and right-click a crop to reveal seed types for good.',
     fish: 'Fishing', fishHint: 'What bites in shallow / medium / deep water, and on what',
+    nav: { ing:'Ingredients', dish:'Recipes', farm:'Farming', fish:'Fishing', top:'Top' },
     zoneNote: { shallow:'Bright green water — kelp and message bottles', medium:'Teal water — reefs appear, Malbatross and Rockjaw roam', deep:'Dark blue — more reefs, bigger fish' },
     special: 'While a school refreshes in medium water there is a 10% chance of a Malbatross and 7.5% of a Rockjaw.',
     baitTitle: 'Which bait to use',
@@ -893,15 +918,54 @@ function renderFarm(){
     </tr></thead><tbody>${rows}</tbody>`;
 }
 
+/* ================= quick jump ================= */
+const JUMP = [
+  {key:'ing',  id:'panelIng'},
+  {key:'dish', id:'panelDish'},
+  {key:'farm', id:'farmPanel'},
+  {key:'fish', id:'oceanPanel'}
+];
+
+function updateJump(){
+  const bar = document.getElementById('jumpbar');
+  if(!bar) return;
+  let cur = '';
+  JUMP.forEach(j => {
+    const el = document.getElementById(j.id);
+    if(el && el.getBoundingClientRect().top <= 140) cur = j.id;
+  });
+  [...bar.querySelectorAll('button')].forEach(b => b.classList.toggle('on', b.dataset.jump === cur));
+}
+
+function renderJump(){
+  const s = L();
+  document.getElementById('jumpbar').innerHTML =
+    JUMP.map(j => `<button data-jump="${j.id}">${s.nav[j.key]}</button>`).join('') +
+    `<span class="sep"></span><button data-jump="top">${s.nav.top}</button>`;
+  updateJump();
+}
+
+window.addEventListener('scroll', () => {
+  const bar = document.getElementById('jumpbar');
+  if(!bar) return;
+  bar.classList.toggle('show', window.scrollY > 240);
+  updateJump();
+}, {passive:true});
+
 /* ================= events ================= */
 document.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-role],[data-name],[data-ing],#unsel,.thead .th,[data-reset],#langBtn');
+  const t = e.target.closest('[data-role],[data-name],[data-ing],#unsel,.thead .th,[data-reset],#langBtn,[data-jump]');
   if(!t) return;
 
+  if(t.dataset.jump){
+    if(t.dataset.jump === 'top'){ window.scrollTo({top:0, behavior:'smooth'}); }
+    else { const el = document.getElementById(t.dataset.jump); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    return;
+  }
   if(t.id === 'langBtn'){
     lang = lang === 'zh' ? 'en' : 'zh';
     localStorage.setItem(LANG_KEY, lang);
-    renderSorts(); renderIng(); renderDish(); renderFarm(); renderOcean(); applyStatic();
+    renderSorts(); renderIng(); renderDish(); renderFarm(); renderOcean(); renderJump(); applyStatic();
     return;
   }
   if(t.dataset.role === 'season'){ state.fseason = t.dataset.season; renderFarm(); return; }
@@ -954,7 +1018,7 @@ document.addEventListener('keydown', (e) => {
 })();
 $('#statIng').textContent = ING.length;
 $('#statDish').textContent = DISH.length;
-applyStatic(); renderSorts(); renderIng(); renderDish(); renderFarm(); renderOcean();
+applyStatic(); renderSorts(); renderIng(); renderDish(); renderFarm(); renderOcean(); renderJump();
 </script>
 </body>
 </html>
