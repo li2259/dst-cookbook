@@ -246,6 +246,42 @@
   .langbtn span.on{background:linear-gradient(180deg,var(--ember2),var(--ember));color:#1a1108;font-weight:700}
   .langbtn:hover span:not(.on){color:var(--ink)}
   .sbtn span{white-space:nowrap}
+  /* ---------- farming ---------- */
+  .farm{margin-top:18px;height:auto;max-height:none;min-height:0}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px;padding:14px}
+  .fcard{
+    background:linear-gradient(180deg,#241c17,#1b1512);border:1px solid var(--line);border-radius:12px;
+    padding:13px;transition:transform .18s,border-color .18s,box-shadow .18s;animation:fade .3s ease both;
+  }
+  .fcard:hover{transform:translateY(-2px);border-color:#5a4433;box-shadow:0 12px 26px rgba(0,0,0,.4)}
+  .fseeds{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .seedunit{display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;flex:0 0 64px}
+  .seedunit .sicon{
+    width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 40% 30%,rgba(255,255,255,.12),rgba(255,255,255,.015));
+    border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 6px 14px rgba(0,0,0,.28);
+  }
+  .seedunit .sicon svg{width:31px;height:31px;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+  .seedunit .cnt{font-size:11.5px;color:var(--ember2);font-variant-numeric:tabular-nums;letter-spacing:.03em;font-weight:600}
+  .seedunit .cn{font-size:10px;color:var(--muted);white-space:normal;text-align:center;line-height:1.25;max-width:64px;word-break:break-word}
+  .fmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10.5px;color:var(--dim)}
+  .fmeta .pill{border:1px solid var(--line);border-radius:5px;padding:2.5px 6px;color:var(--muted);letter-spacing:.02em}
+  .fmeta .pill.ok{color:#a2cf8b;border-color:#3d5334;background:rgba(125,187,106,.09)}
+  .fmeta .pill.fert{color:#e9b271;border-color:#5a3f22;background:rgba(255,138,61,.09)}
+  .ntwrap{border-top:1px solid var(--line);padding:14px 14px 16px}
+  .nthead{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .nthead span{font-family:var(--serif);font-size:14px;letter-spacing:.06em}
+  .nthead small{font-size:11px;color:var(--dim)}
+  .farmtable{overflow-x:auto}
+  table.nt{width:100%;max-width:860px;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+  .ntnote{margin-top:10px;font-size:11px;color:var(--dim);line-height:1.7;max-width:860px}
+  .nt th,.nt td{padding:6px 9px;border-bottom:1px solid rgba(53,42,34,.55);text-align:left;white-space:nowrap}
+  .nt th{color:var(--dim);font-weight:500;letter-spacing:.09em;font-size:10px;text-transform:uppercase}
+  .nt tbody tr:hover{background:rgba(255,138,61,.05)}
+  .nt td.neg{color:#ef8b81}
+  .nt td.pos{color:#93c97d}
+  .nt .dotc{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px;vertical-align:0}
+
   body.en .thead,body.en .irow{grid-template-columns:minmax(128px,1.45fr) 1fr 1fr 1fr}
   @media (max-width:720px){
     .headright{flex:1 1 100%;max-width:none;justify-content:space-between}
@@ -306,6 +342,19 @@
     </section>
   </main>
 
+  <section class="panel farm" id="farmPanel">
+    <div class="phead">
+      <h2><span id="lbFarm">种地配比</span> <small id="farmHint"></small></h2>
+      <div class="sorts" id="farmSorts"></div>
+    </div>
+    <div class="fgrid" id="farmGrid"></div>
+    <div class="ntwrap">
+      <div class="nthead"><span id="ntTitle">作物养分表</span><small id="ntHint"></small></div>
+      <div class="farmtable"><table class="nt" id="ntTable"></table></div>
+      <div class="ntnote" id="ntNote"></div>
+    </div>
+  </section>
+
   <footer id="foot"></footer>
 </div>
 
@@ -327,6 +376,14 @@ const S = {
     emptyIng: '没找到这个食材。<br>试试 <b>浆果</b>、<b>火龙果</b>、<b>怪物肉</b>。',
     emptyDish: '还没找到能做的菜。<br>换个食材，或者清空搜索看看全部配方。',
     showAll: (n) => `查看全部 ${n} 道菜`,
+    farm: '种地配比', farmHint: '作物互相补肥，一块田种满就不用反复施肥',
+    seasonAll: '全部', seasons: { spring:'春', summer:'夏', autumn:'秋', winter:'冬' },
+    tiles: (n) => `${n} 格`, safe: '新土即可', fert: '需施肥一次',
+    ntTitle: '作物养分表', ntHint: '每阶段结束结算一次，负数为消耗、正数为释放',
+    ntCrop: '作物', ntSeason: '适宜季节', ntWater: '耗水',
+    nFormula: '催长剂', nCompost: '堆肥', nManure: '粪肥',
+    water: { low:'低', med:'中', high:'高' },
+    swap: '同类作物可以互换：洋葱 ↔ 石榴、玉米 ↔ 芦笋、土豆 ↔ 茄子、胡萝卜 ↔ 南瓜、火龙果 ↔ 辣椒、榴莲 ↔ 大蒜。配比按 9–10 格的田算，换季前后记得先收一茬再改种。',
     foot: '<b>数据说明</b>：数值参考《饥荒：联机版》烹饪锅与社区资料整理（生存三维 = 饥饿 / 生命 / 理智），角色、版本与某些特殊食材会带来差异；「需求」写的是烹饪锅判定条件，不是唯一配方，同类食材可以互换。<br /><b>用法</b>：点表头切换排序方向；输入食材名可定位食材并列出相关菜；点菜肴里的食材小标签可反查这个食材。数值为 0 的食材多作填充或不可直接食用。'
   },
   en: {
@@ -344,6 +401,14 @@ const S = {
     emptyIng: 'No such ingredient.<br>Try <b>berries</b>, <b>dragon fruit</b> or <b>monster meat</b>.',
     emptyDish: 'No dishes found.<br>Pick another ingredient, or clear the search.',
     showAll: (n) => `Show all ${n} dishes`,
+    farm: 'Crop Combos', farmHint: 'Crops feed each other — fill a plot and skip the fertilizer',
+    seasonAll: 'All', seasons: { spring:'Spring', summer:'Summer', autumn:'Autumn', winter:'Winter' },
+    tiles: (n) => `${n} slots`, safe: 'Safe on fresh soil', fert: 'Fertilize once',
+    ntTitle: 'Crop nutrients', ntHint: 'Settled after every stage — minus = consumed, plus = released',
+    ntCrop: 'Crop', ntSeason: 'Seasons', ntWater: 'Water',
+    nFormula: 'Growth Formula', nCompost: 'Compost', nManure: 'Manure',
+    water: { low:'Low', med:'Med', high:'High' },
+    swap: 'Interchangeable crops: Onion ↔ Pomegranate, Corn ↔ Asparagus, Potato ↔ Eggplant, Carrot ↔ Pumpkin, Dragon Fruit ↔ Pepper, Durian ↔ Garlic. Ratios assume a 9–10 slot plot; harvest before switching crops for the season.',
     foot: '<b>Data</b>: values follow Don\'t Starve Together\'s crock pot and community references (the three stats are hunger / health / sanity). Characters, versions and special ingredients can shift things; “requirements” are the pot\'s checks, not the only recipe — similar ingredients swap freely.<br /><b>How to</b>: click a column header to flip the sort; type an ingredient to find its dishes; click an ingredient tag inside a card to look it up. Items with 0 stats are mostly filler or not edible raw.'
   }
 };
@@ -425,8 +490,59 @@ const DISH = [
   {n:'湿嗒嗒的一坨',e:'Wet Goop',      h:0,    p:0,   s:0,   prio:'0',  need:'没有匹配到任何配方的失败品（例：4 个烤桦树果）', needE:'No recipe matched (e.g. 4 roasted birchnuts)', uses:['桦树果','树枝']}
 ];
 
+/* ================= 农业数据 / farming data ================= */
+/* n = [催长剂 Growth Formula, 堆肥 Compost, 粪肥 Manure] 每阶段增减 */
+const CROPS = {
+  carrot:     {zh:'胡萝卜', en:'Carrot',       c:'#e8842f', seasons:['spring','autumn','winter'],        n:[-4,  2,  2], water:'low'},
+  corn:       {zh:'玉米',   en:'Corn',         c:'#f2c437', seasons:['spring','summer','autumn'],        n:[ 2, -4,  2], water:'low'},
+  potato:     {zh:'土豆',   en:'Potato',       c:'#c9a06a', seasons:['spring','autumn','winter'],        n:[ 2,  2, -4], water:'low'},
+  tomato:     {zh:'番茄',   en:'Toma Root',    c:'#d8442f', seasons:['spring','summer','autumn'],        n:[-2, -2,  4], water:'high'},
+  asparagus:  {zh:'芦笋',   en:'Asparagus',    c:'#7fae52', seasons:['spring','winter'],                 n:[ 2, -4,  2], water:'low'},
+  eggplant:   {zh:'茄子',   en:'Eggplant',     c:'#7b4a9c', seasons:['spring','autumn'],                 n:[ 2,  2, -4], water:'med'},
+  pumpkin:    {zh:'南瓜',   en:'Pumpkin',      c:'#e08a2b', seasons:['autumn','winter'],                 n:[-4,  2,  2], water:'med'},
+  watermelon: {zh:'西瓜',   en:'Watermelon',   c:'#4e9e57', seasons:['spring','summer'],                 n:[ 4, -2, -2], water:'high'},
+  dragonfruit:{zh:'火龙果', en:'Dragon Fruit', c:'#d94f7a', seasons:['spring','summer'],                 n:[ 4,  4, -8], water:'med'},
+  durian:     {zh:'榴莲',   en:'Durian',       c:'#b5a13a', seasons:['spring'],                          n:[ 4, -8,  4], water:'low'},
+  garlic:     {zh:'大蒜',   en:'Garlic',       c:'#e8e0c8', seasons:['spring','summer','autumn','winter'],n:[ 4, -8,  4], water:'low'},
+  onion:      {zh:'洋葱',   en:'Onion',        c:'#b06a8a', seasons:['spring','summer','autumn'],        n:[-8,  4,  4], water:'med'},
+  pepper:     {zh:'辣椒',   en:'Pepper',       c:'#cf3b2b', seasons:['summer','autumn'],                 n:[ 4,  4, -8], water:'low'},
+  pomegranate:{zh:'石榴',   en:'Pomegranate',  c:'#b5352f', seasons:['spring','summer'],                 n:[-8,  4,  4], water:'med'}
+};
+
+/* 每块田 9–10 格；同类作物可互换（洋葱/石榴、玉米/芦笋、土豆/茄子、胡萝卜/南瓜、火龙果/辣椒、榴莲/大蒜） */
+const FARM = [
+  {mix:[['carrot',3],['corn',3],['potato',3]], safe:true},
+  {mix:[['carrot',4],['corn',4],['dragonfruit',2]], safe:true},
+  {mix:[['carrot',4],['potato',4],['durian',2]], safe:true},
+  {mix:[['onion',2],['corn',4],['dragonfruit',2]], safe:true},
+  {mix:[['tomato',5],['potato',5]], safe:true},
+  {mix:[['carrot',3],['asparagus',3],['potato',3]], safe:true},
+  {mix:[['carrot',4],['garlic',2],['dragonfruit',2]], safe:true},
+  {mix:[['pumpkin',4],['potato',4],['garlic',2]], safe:true},
+  {mix:[['pumpkin',4],['corn',4],['pepper',2]], safe:true},
+  {mix:[['onion',2],['potato',4],['garlic',2]], safe:true},
+  {mix:[['tomato',6],['dragonfruit',3]], safe:false},
+  {mix:[['tomato',6],['pepper',3]], safe:false},
+  {mix:[['onion',3],['garlic',3],['dragonfruit',3]], safe:false},
+  {mix:[['onion',3],['watermelon',6]], safe:false}
+];
+
+function seedSvg(k){
+  const col = CROPS[k].c;
+  return `<svg viewBox="0 0 32 32" aria-hidden="true">
+    <defs><radialGradient id="sg-${k}" cx="36%" cy="28%" r="78%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".65"/>
+      <stop offset="38%" stop-color="${col}"/>
+      <stop offset="100%" stop-color="#241610" stop-opacity=".95"/>
+    </radialGradient></defs>
+    <path d="M16 29c-4.6 0-8.4-4.6-8.4-10.4C7.6 11.7 11.3 6 16 6s8.4 5.7 8.4 12.6C24.4 24.4 20.6 29 16 29z" fill="url(#sg-${k})" stroke="rgba(0,0,0,.32)"/>
+    <path d="M16 7.5c1.4-3 4-4.6 6.8-4.5-.5 3.1-2.8 5.4-6.4 6z" fill="#6f9d4c"/>
+    <path d="M15.4 8.8c-2.6-1.4-4.2-3.6-4.4-6.1 3 .3 5.1 2.4 5.6 5.5z" fill="#8ab968" opacity=".9"/>
+  </svg>`;
+}
+
 /* ================= state ================= */
-const state = { stat:'hunger', dir:'desc', q:'', sel:null, dstat:'hunger', ddir:'desc' };
+const state = { stat:'hunger', dir:'desc', q:'', sel:null, dstat:'hunger', ddir:'desc', fseason:'all' };
 const IMAX = { h:37.5, p:20, s:15 };
 const DMAX = { h:150,  p:100, s:33 };
 const KEY = { hunger:'h', health:'p', sanity:'s' };
@@ -598,6 +714,58 @@ function renderHero(){
     <div class="chart">${cols}</div>`;
 }
 
+/* ================= farming render ================= */
+function renderFarm(){
+  const s = L();
+  $('#lbFarm').textContent = s.farm;
+  $('#farmHint').textContent = s.farmHint;
+  $('#ntTitle').textContent = s.ntTitle;
+  $('#ntHint').textContent = s.ntHint;
+  $('#ntNote').textContent = s.swap;
+
+  const seasons = ['spring','summer','autumn','winter'];
+  $('#farmSorts').innerHTML =
+    `<button class="sbtn" data-role="season" data-season="all" aria-pressed="${state.fseason==='all'}">${s.seasonAll}</button>` +
+    seasons.map(k => `<button class="sbtn" data-role="season" data-season="${k}" aria-pressed="${state.fseason===k}">${s.seasons[k]}</button>`).join('');
+
+  const list = FARM.filter(c => state.fseason === 'all' || c.mix.every(([k]) => CROPS[k].seasons.includes(state.fseason)));
+
+  $('#farmGrid').innerHTML = list.length ? list.map(c => {
+    const tiles = c.mix.reduce((a, [, n]) => a + n, 0);
+    const common = c.mix.map(([k]) => CROPS[k].seasons).reduce((acc, arr) => acc.filter(x => arr.includes(x)));
+    const seasonTxt = common.length ? common.map(k => s.seasons[k]).join(' / ') : '—';
+    const seeds = c.mix.map(([k, n]) => `<div class="seedunit">
+        <div class="sicon">${seedSvg(k)}</div>
+        <div class="cnt">×${n}</div>
+        <div class="cn">${lang === 'zh' ? CROPS[k].zh : CROPS[k].en}</div>
+      </div>`).join('');
+    return `<article class="fcard">
+      <div class="fseeds">${seeds}</div>
+      <div class="fmeta">
+        <span class="pill">${s.tiles(tiles)}</span>
+        <span class="pill">${seasonTxt}</span>
+        <span class="pill ${c.safe ? 'ok' : 'fert'}">${c.safe ? s.safe : s.fert}</span>
+      </div>
+    </article>`;
+  }).join('') : `<div class="empty" style="grid-column:1/-1">${lang === 'zh' ? '这个季节没有免施肥的配比，换季或者补一次肥吧。' : 'No fertilizer-free combo this season — change season or fertilize once.'}</div>`;
+
+  const rows = Object.keys(CROPS).map(k => {
+    const c = CROPS[k];
+    const cell = (v) => `<td class="${v < 0 ? 'neg' : 'pos'}">${v > 0 ? '+' : ''}${v}</td>`;
+    return `<tr>
+      <td><span class="dotc" style="background:${c.c}"></span>${lang === 'zh' ? c.zh : c.en}</td>
+      <td>${c.seasons.map(x => s.seasons[x]).join(' · ')}</td>
+      ${cell(c.n[0])}${cell(c.n[1])}${cell(c.n[2])}
+      <td>${s.water[c.water]}</td>
+    </tr>`;
+  }).join('');
+
+  $('#ntTable').innerHTML = `<thead><tr>
+      <th>${s.ntCrop}</th><th>${s.ntSeason}</th>
+      <th>${s.nFormula}</th><th>${s.nCompost}</th><th>${s.nManure}</th><th>${s.ntWater}</th>
+    </tr></thead><tbody>${rows}</tbody>`;
+}
+
 /* ================= events ================= */
 document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-role],[data-name],[data-ing],#unsel,.thead .th,[data-reset],#langBtn');
@@ -606,9 +774,10 @@ document.addEventListener('click', (e) => {
   if(t.id === 'langBtn'){
     lang = lang === 'zh' ? 'en' : 'zh';
     localStorage.setItem(LANG_KEY, lang);
-    renderSorts(); renderIng(); renderDish(); applyStatic();
+    renderSorts(); renderIng(); renderDish(); renderFarm(); applyStatic();
     return;
   }
+  if(t.dataset.role === 'season'){ state.fseason = t.dataset.season; renderFarm(); return; }
   if(t.dataset.reset){ state.sel = null; state.q = ''; $('#q').value = ''; renderIng(); renderDish(); return; }
   if(t.id === 'unsel'){ state.sel = null; renderIng(); renderDish(); return; }
 
@@ -658,7 +827,7 @@ document.addEventListener('keydown', (e) => {
 })();
 $('#statIng').textContent = ING.length;
 $('#statDish').textContent = DISH.length;
-applyStatic(); renderSorts(); renderIng(); renderDish();
+applyStatic(); renderSorts(); renderIng(); renderDish(); renderFarm();
 </script>
 </body>
 </html>
